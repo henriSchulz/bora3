@@ -19,28 +19,36 @@ import { Label } from "@/components/ui/label";
 
 import { useActionState, useEffect, useRef } from "react";
 
-import { createDashboard, type FormState } from "../actions";
+import { createDashboard } from "../actions";
 
 
 
 export default function () {
 
-
-    const initialState: FormState = { message: "", errors: {} };
   
-    // 2. Use the useFormState hook to manage form state and actions
-    const [state, formAction] = useActionState(createDashboard, initialState);
-    
     const formRef = useRef<HTMLFormElement>(null);
     const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-    // Close dialog and reset form on successful submission
-    useEffect(() => {
-      if (state.message === "Dashboard created successfully!") {
-        formRef.current?.reset();
-        closeButtonRef.current?.click();
+
+    async function handelCreateDashboard(event: React.FormEvent) {
+      event.preventDefault();
+      
+  
+      const formData = new FormData(formRef.current!);
+      const result = await createDashboard(formData);
+
+      if(!result.success) {
+        alert(result.errors.join("\n"));
+        return;
       }
-    }, [state.message]);
+      
+      // Close the modal on success
+      closeButtonRef.current?.click();
+      // Optionally, reset the form
+      formRef.current?.reset();
+
+    }
+  
 
 
     return  <Dialog>
@@ -57,67 +65,26 @@ export default function () {
             Please provide a name for your new dashboard and upload the corresponding schematic file to get started.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex items-center gap-2">
-          <div className="grid flex-1 gap-2">
-           
-            <form ref={formRef} action={formAction}>
+          <form ref={formRef} onSubmit={handelCreateDashboard} className="w-full">
+       <Input type="text" name="new-dashboard-name" placeholder="Dashboard Name" className="w-full mb-3" required />
 
-            <div className="mb-2">
-                 <Label htmlFor="new-dashboard-name" className="mb-1"> Dashboard Name</Label>
-                <Input 
-                  id="new-dashboard-name" 
-                  name="new-dashboard-name"
-                  placeholder="e. g. My Dashboard" 
-                />
-                {state.errors?.dashboardName && (
-                    <p className="text-sm text-red-500 mt-1">
-                        {state.errors.dashboardName[0]}
-                    </p>
-                )}
-            </div>
+       <Input type="file" name="new-dashboard-schematic" accept=".jpg,.jpeg,.png,.webp" className="w-full mb-4" required />
+          
 
-           <div>
-             <Label htmlFor="new-dashboard-schematic" className="mb-1">Schematic</Label>
-             <Input 
-               id="new-dashboard-schematic" 
-               name="new-dashboard-schematic"
-               type="file" 
-             />
-             {state.errors?.file && (
-          <p className="text-sm text-red-500 mt-1">
-            {state.errors.file[0]}
-          </p>
-        )}
-           </div>
-
-           {/* Success message display */}
-           {state.message && !state.errors?.dashboardName && !state.errors?.file && (
-             <div className="text-sm text-green-600 mt-2">
-               {state.message}
-             </div>
-           )}
-
-           {/* General error message */}
-           {state.message && (state.errors?.dashboardName || state.errors?.file) && (
-             <div className="text-sm text-red-500 mt-2">
-               {state.message}
-             </div>
-           )}
-             <DialogFooter className="sm:justify-start">
+             <DialogFooter className="sm:justify-start mt-4">
+                        
             <Button type="submit" className="w-full sm:w-auto">Submit</Button>
-
-
+         
           <DialogClose asChild>
             <Button ref={closeButtonRef} type="button" variant="secondary">
               Close
             </Button>
           </DialogClose>
         </DialogFooter>
-            </form>
+             </form>
             
-          </div>
-        </div>
-       
+        
+
       </DialogContent>
     </Dialog>   
    

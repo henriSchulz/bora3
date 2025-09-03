@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, unlink } from "fs/promises";
+import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
@@ -19,16 +20,10 @@ const ACCEPTED_IMAGE_TYPES = [
 
 // Type for form state
 
-export type FormState = {
-  message: string;
-  errors?: {
-    dashboardName?: string[];
-    file?: string[];
-  };
-};
+
 
 // Schema for form validation
-const DashboardSchema = z.object({
+const CreateDashboardSchema = z.object({
     dashboardName: z
         .string("Dashboard name is required.")
         .min(3, { message: "Name must be at least 3 characters long." })
@@ -46,17 +41,26 @@ const DashboardSchema = z.object({
         ),
 });
 
+const RenameDashboardSchema = z.object({
+    newName: z
+        .string("Dashboard name is required.")
+        .min(3, { message: "Name must be at least 3 characters long." })
+        .max(50, { message: "Name must be at most 50 characters long." }),
+});
+
+
+
+
 // Action to create a new dashboard and handle form submission
 export async function createDashboard(
-  prevState: FormState,
   formData: FormData
-): Promise<FormState> {
+): Promise<{success: boolean; errors: string[]}> {
   // 1. Extract form data
   const file = formData.get("new-dashboard-schematic");
   const dashboardName = formData.get("new-dashboard-name");
 
   // 2. Validate the data using your schema
-  const validatedFields = DashboardSchema.safeParse({
+  const validatedFields = CreateDashboardSchema.safeParse({
     dashboardName,
     file,
   });
@@ -64,9 +68,9 @@ export async function createDashboard(
   // 3. If validation fails, return errors
   if (!validatedFields.success) {
     return {
-      message: "Input Error: Please correct the fields.",
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
+      success: false,
+      errors: validatedFields.error.flatten().fieldErrors.dashboardName || [""],
+    }
   }
 
   const {
@@ -89,16 +93,27 @@ export async function createDashboard(
     await writeFile(filePath, buffer);
   } catch (error) {
     return {
-      message: "Error: Could not save the uploaded file.",
-      errors: {
-        file: ["Could not save the uploaded file. Please try again."],
-      },
+      success: false,
+      errors: ["Could not upload the file. Please try again."],
     };
   }
 
   
 
   try {
+    // check if the name is already taken
+    const existingDashboard = await prisma.dashboard.findUnique({
+      where: { name: validatedName },
+    });
+
+    if (existingDashboard) {
+        return {
+        success: false,
+        errors: ["Dashboard name is already taken. Please choose another name."],
+      };
+  }
+
+
     await prisma.dashboard.create({
       data: {
         name: validatedName,
@@ -108,14 +123,111 @@ export async function createDashboard(
     
     // Revalidate the dashboards page to show the new dashboard
     revalidatePath("/dashboards");
+    return { success: true, errors: [] };
+    //redirect("/dashboards");
   } catch (error) {
+    console.log(error);
+    // delete the uploaded file if database operation fails
+
+    try {
+      if(fs.existsSync(filePath)) await unlink(filePath);
+    } catch (fsError) {
+      console.log("Failed to delete the uploaded file after DB error:", fsError);
+    }
+
     return {
-      message: "Error: Could not create dashboard.",
-      errors: {
-        dashboardName: ["Could not create dashboard. Please try again."],
-      },
-    };
+      success: false,
+      errors: ["Could not create dashboard: Database error. Please try again."],
+    }
   }
 
-  return { message: "Dashboard created successfully!" };
 }
+
+export async function deleteDashboard(dashboardId: string): Promise<{success: boolean; errors: string[]}> {
+  try {
+    // Find the dashboard to get the image path
+    const dashboard = await prisma.dashboard.findUnique({
+      where: { id: dashboardId },
+    });
+
+    if (!dashboard) {
+      return { success: false, errors: ["Could not delete dashboard. Please refresh and try again."] };
+    }
+
+    const imagePath = dashboard.schematicImagePath;
+
+    // Delete the dashboard from the database
+    await prisma.dashboard.delete({
+      where: { id: dashboardId },
+    });
+    
+    // Delete the associated image file if it exists
+    if (imagePath) {
+      const fullImagePath = path.join(process.cwd(), "public", imagePath);
+      try {
+        if(fs.existsSync(fullImagePath)) await unlink(fullImagePath);
+      } catch (fsError) {
+        console.log("Failed to delete the dashboard image file:", fsError);
+      }
+    }
+    // Revalidate the dashboards page to reflect the deletion
+    revalidatePath("/dashboards");
+    
+    // Todo: Delete corresponding widgets amd sensors when implemented
+
+    return { success: true, errors: [] };
+
+  } catch (error) {
+    console.log(error);
+    return { success: false, errors: ["Could not delete dashboard. Please refresh and try again."] };
+  }
+}
+
+export async function renameDashboard(dashboardId: string, newName: string): Promise<{success: boolean; errors: string[]}> {
+
+  // 1. Validate the new name
+  const validatedFields = RenameDashboardSchema.safeParse({
+    newName,
+  });
+
+  // 2. If validation fails, return errors
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      errors: validatedFields.error.flatten().fieldErrors.newName || [""],
+    }
+  }
+
+  const { newName: validatedName }: { newName: string } = validatedFields.data;
+
+  try {
+    // check if the name is already taken
+    const existingDashboard = await prisma.dashboard.findUnique({
+      where: { name: validatedName },
+    });
+
+    if (existingDashboard) {
+        return {
+        success: false,
+        errors: ["Dashboard name is already taken. Please choose another name."],
+      };
+  }
+
+    // Update the dashboard name in the database
+    await prisma.dashboard.update({
+      where: { id: dashboardId },
+      data: { name: validatedName },
+    });
+
+    // Revalidate the dashboards page to reflect the name change
+    revalidatePath("/dashboards");
+
+    return { success: true, errors: [] };
+
+}
+  catch (error) {
+    console.log(error);
+    return { success: false, errors: ["Could not rename dashboard. Please refresh and try again."] };
+  }
+}
+  
