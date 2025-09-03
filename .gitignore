@@ -3,6 +3,7 @@
 
 package-lock.json
 testDataInserter.ts
+*.db
 
 # dependencies
 /node_modules
