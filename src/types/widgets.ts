@@ -3,6 +3,7 @@ export type Point = {x: number, y:number};
 export interface Widget {
     id: string; 
     position: Point;
+    type: string;
 }
 
 type FontWeight = "normal" | "bold";
@@ -36,7 +37,6 @@ export interface TextWidet extends LabeldWidgeet {
 }
 
 export interface DataWidget extends LabeldWidgeet {
-    value: number;
     unit?: string; // default: "" e.g. "kg", "m", "s", ...
     decimalPlaces?: number; // default: 2
     exp?: boolean // default: false, if true, use scientific notation: 1.23e+4
@@ -57,6 +57,18 @@ export interface ValueWidget extends DataWidget {
 export interface CalcWidget extends DataWidget {
     type: "calc";
     expression: string; // e.g. "a + b * c"
-    
+
 }
 
+export interface IconWidget extends Widget {
+    type: "icon";
+    height: number;
+    width: number;
+    conditions: [
+        {
+            condition: Condition; // condition to evaluate
+            value: number | [number, number]; // single value or interval
+            icon: string; // FontAwesome icon name e.g. "fa-solid fa-check"
+        }
+    ]
+}
