@@ -4,7 +4,7 @@
     <img src="./assets/katrin.png" width="100%" />
 </p>
 
-BORA is an open source visualization framework designed for large-scale experiments. It generates personalized data displays and supports human-in-the-loop workflows. BORA enables scientists to configure data displays without programming. The framework provides two main functions: read-only displays for monitoring experiment subsystems, and interactive controls for system and data acquisition parameters. It supports feedback for multiple data processing pipelines operating on large data volumes in real time. BORA uses RESTful APIs and supports standard protocols through plugins, including database integration (e.g., Redis) and control protocols (e.g., OPC). Experiment-specific protocols, such as ORCA, are also implemented.
+BORA is an open source visualization framework designed for large-scale experiments. It generates personalized data displays and supports human-in-the-loop workflows. BORA enables scientists to configure data displays without programming. The framework provides two main functions: read-only displays for monitoring experiment subsystems, and interactive controls for system and data acquisition parameters. It supports feedback for multiple data processing pipelines operating on large data volumes in real time. 
 
 ## Bora 3
 
