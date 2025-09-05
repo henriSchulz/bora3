@@ -1,29 +1,27 @@
-export type Point = {x: number, y:number};
+export type Point = { x: number; y: number }; // in percentage of dashboard size
 
+// ========== Base Widget Types ==========
 
-
-/*
-==== WIDGET TYPES ====
-
-These widgets are fronntend types only. The database representation is in prisma/schema.prisma
-
-
-
-
-*/
-
-export type WidgetType = "TEXT" | "VALUE" | "CALC" | "ICON";
-
-export interface Widget {
-    id: string; 
+// All widgets share these properties
+export interface BaseWidget {
+    id: string;
     position: Point;
-    type: string; // "TEXT", "VALUE", "CALC", "ICON"
+    width: number;
+    height: number;
     dashboardId: string;
+    type: WidgetType;
 }
 
-type FontWeight = "normal" | "bold";
+// ========== Data Source Types ==========
 
-enum Condition {
+// Defines where a widget gets its value from
+export type DataSource =
+    | { type: 'database'; dataId: string; } // directly  fetch a single data point
+    | { type: 'calculation'; expression: string; dataIds: string[]; }; // fetches multiple data points and calculates a value
+
+// ========== Conditional Formatting ==========
+
+export enum Condition {
     Equals = "equals",
     LessThan = "less-than",
     GreaterThan = "greater-than",
@@ -36,60 +34,64 @@ enum Condition {
     IsInLeftInclusiveRightExclusiveInterval = "is-in-left-inclusive-right-exclusive-interval"
 }
 
+// Represents a single conditional rule
+export type ConditionalRule<T> = {
+    condition: Condition;
+    value: number | [number, number]; // Single value or interval
+    format: T;
+};
 
+// Specific format types
+export type ColorFormat = { color: string };
+export type IconFormat = { icon: string }; // e.g., "fa-solid fa-check"
 
-export interface LabeldWidget extends Widget {
-    textContent: string;
-    fontSize?: number; // default: 16
-    fontWeight?: FontWeight // default: "normal"
-    height: number;
-    width: number;
-    backgroundColor?: string; // default: "transparent"
-    defaultTextColor?: string; // black
-}
+// ========== Widget-Specific Interfaces ==========
 
-export interface TextWidet extends LabeldWidget {
+type FontWeight = "normal" | "bold";
+
+// --- Text Widget ---
+export interface TextWidget extends BaseWidget {
     type: "TEXT";
+    textContent: string;
+    fontSize?: number;
+    fontWeight?: FontWeight;
+    backgroundColor?: string;
+    defaultTextColor?: string;
 }
 
-export interface DataWidget extends LabeldWidget {
-    unit?: string; // default: "" e.g. "kg", "m", "s", ...
-    decimalPlaces?: number; // default: 2
-    exp?: boolean // default: false, if true, use scientific notation: 1.23e+4
-    
-    conditions?: 
-        {
-            condition: Condition; // condition to evaluate
-            value: number | [number, number]; // single value or interval
-            color: string; // color to apply if condition is true
-        }[]
-    
+// --- Data-Driven Widgets ---
+
+// Base for any widget that displays data
+export interface DataDrivenWidget extends BaseWidget {
+    dataSource: DataSource;
+    value: number; // The resolved value from the data source
 }
 
-export interface ValueWidget extends DataWidget {
+// --- Value Widget (Displays data as text) ---
+export interface ValueWidget extends DataDrivenWidget {
     type: "VALUE";
-    dataId: string;
-    value: number;
+    textContent?: string; // Optional label
+    unit?: string;
+    decimalPlaces?: number;
+    exp?: boolean; // Scientific notation
+    fontSize?: number;
+    fontWeight?: FontWeight;
+    backgroundColor?: string;
+    defaultTextColor?: string;
+    conditions?: ConditionalRule<ColorFormat>[];
 }
 
-export interface CalcWidget extends DataWidget {
-    type: "CALC";
-    expression: string; // e.g. "a + b * c"
-    dataIds?: string[]; // e.g. ["a", "b", "c"]
-    value: number; // default: 0
-}
-
-export interface IconWidget extends Widget {
+// --- Icon Widget (Displays data as an icon) ---
+export interface IconWidget extends DataDrivenWidget {
     type: "ICON";
-    height: number;
-    width: number;
-    dataId: string;
-    value: number;
-    conditions: 
-        {
-            condition: Condition; // condition to evaluate
-            value: number | [number, number]; // single value or interval
-            icon: string; // FontAwesome icon name e.g. "fa-solid fa-check"
-        }[];
-    
+    defaultIcon: string; // Fallback icon
+    conditions: ConditionalRule<IconFormat>[];
 }
+
+
+
+
+export type Widget = TextWidget | ValueWidget | IconWidget;
+
+// Discriminated union key
+export type WidgetType = Widget['type']; // "TEXT" | "VALUE" | "ICON"

@@ -30,6 +30,8 @@ model Widget {
   updatedAt DateTime @updatedAt
   positionX Float
   positionY Float
+  height    Float
+  width     Float
   type      String 
 
   properties Json

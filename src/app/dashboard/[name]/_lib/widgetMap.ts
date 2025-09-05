@@ -1,12 +1,10 @@
 import TextWidgetComponent from "../_components/TextWidget";
-import CalcWidgetComponent from "../_components/CalcWidget";
 import ValueWidgetComponent from "../_components/ValueWidget";
 import IconWidgetComponent from "../_components/IconWidget";
 import { WidgetMap } from "../_types/widgetUtils";
 
 import {
     toTextWidget,
-    toCalcWidget,
     toValueWidget,
     toIconWidget
 } from "./widgetMapperFunctions";
@@ -24,15 +22,10 @@ New widget types can be added here by defining their component and mapper functi
 
 */
 
-
 export const WIDGET_MAP: WidgetMap = {
     TEXT: {
         component: TextWidgetComponent,
         mapper: toTextWidget
-    },
-    CALC: {
-        component: CalcWidgetComponent,
-        mapper: toCalcWidget
     },
     VALUE: {
         component: ValueWidgetComponent,

@@ -9,8 +9,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { loadWidgets } from "./actions";
 import WidgetRenderer from "./_components/WidgetRenderer";
-
-
+import DashboardCanvas from "./_components/DashboardCanvas";
 
 export default async function DashboardPage({
   params,
@@ -36,28 +35,15 @@ export default async function DashboardPage({
   const widgets = await loadWidgets(dashboard.id);
 
   return (
-    <div>
-      <div className="grid items-center place-items-center">
-        <div className="max-w-[90%]">
-          <div className="m-2 mt-4 flex justify-end gap-2">
-            <Button>
-              <FontAwesomeIcon icon={faPlus} />
-              New Widget
-            </Button>
-          </div>
-          <div className="p-14 border border-black relative">
-
-            {widgets.map((widget) => (<WidgetRenderer key={widget.id} widget={widget} />))}
-
-            <img
-              src={dashboard.schematicImagePath}
-              alt="Schematisches Bild"
-              className={styles.schematicImage}
-              id="schematicImage"
-            />
-          </div>
-        </div>
+    <div className="max-w-[90%] mx-auto">
+      <div className="m-2 mt-4 flex justify-end gap-2">
+        <Button>
+          <FontAwesomeIcon icon={faPlus} />
+          New Widget
+        </Button>
       </div>
+
+      <DashboardCanvas dashboard={dashboard} initialWidgets={widgets} />
     </div>
   );
 }
