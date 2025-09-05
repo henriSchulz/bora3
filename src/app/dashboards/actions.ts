@@ -114,7 +114,7 @@ export async function createDashboard(
   }
 
 
-    await prisma.dashboard.create({
+    const dashboard = await prisma.dashboard.create({
       data: {
         name: validatedName,
         schematicImagePath: `/uploads/${fileName}`,
@@ -123,6 +123,7 @@ export async function createDashboard(
     
     // Revalidate the dashboards page to show the new dashboard
     revalidatePath("/dashboards");
+    console.log(dashboard);
     return { success: true, errors: [] };
     //redirect("/dashboards");
   } catch (error) {

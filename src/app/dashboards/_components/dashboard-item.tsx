@@ -59,7 +59,7 @@ export default function DashboardItem({ dashboard }: { dashboard: Dashboard }) {
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem>
+        <ContextMenuItem onClick={() => window.open(`/dashboard/${dashboard.name}`, "_blank")}>
           <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
           Open Dashboard
         </ContextMenuItem>
