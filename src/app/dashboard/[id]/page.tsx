@@ -8,24 +8,23 @@ import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { loadWidgets } from "./actions";
-import WidgetRenderer from "./_components/WidgetRenderer";
-import DashboardCanvas from "./_components/DashboardCanvas";
+import WidgetRenderer from "./_components/widget-renderer";
+import DashboardCanvas from "./_components/dashboard-canvas";
+import NewWidgetModal from "./_components/modals/new-widget-modal";
 
 export default async function DashboardPage({
   params,
 }: {
-  params: { name: string };
+  params: { id: string };
 }) {
-  const name = params.name;
+  const id = params.id;
 
-  if (!name) {
+  if (!id) {
     return notFound();
   }
 
   const dashboard = await prisma.dashboard.findUnique({
-    where: {
-      name: name,
-    },
+    where: {id}
   });
 
   if (!dashboard) {
@@ -37,10 +36,7 @@ export default async function DashboardPage({
   return (
     <div className="max-w-[90%] mx-auto">
       <div className="m-2 mt-4 flex justify-end gap-2">
-        <Button>
-          <FontAwesomeIcon icon={faPlus} />
-          New Widget
-        </Button>
+       <NewWidgetModal dashboard={dashboard} />
       </div>
 
       <DashboardCanvas dashboard={dashboard} initialWidgets={widgets} />

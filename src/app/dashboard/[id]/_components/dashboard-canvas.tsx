@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { DndContext, DragEndEvent, DragStartEvent, DragCancelEvent } from '@dnd-kit/core';
-import WidgetRenderer from './WidgetRenderer';
+import WidgetRenderer from './widget-renderer';
 import { Widget } from '@/types/widgets';
 import { Dashboard } from '@prisma/client';
 import { updatePositions } from '../actions';
