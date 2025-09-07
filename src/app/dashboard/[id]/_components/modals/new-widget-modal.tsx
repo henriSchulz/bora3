@@ -27,27 +27,45 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { WIDGET_MAP } from "../../../../../widgets/widgetMap";
+import { IWidget, widgetRegistry, WidgetType } from "@/widgets/core/autogen";
 import { useState } from "react";
 
 export default function NewWidgetModal({
-dashboard
+  dashboard,
 }: {
   dashboard: Dashboard;
-
 }) {
-    const [widgetSelectValue, setWidgetSelectValue] = useState<string | undefined>(undefined);
+  const [widgetSelectValue, setWidgetSelectValue] = useState<string>();
 
-    const widgetEntries = Object.entries(WIDGET_MAP);
+  const widgetNames = Object.keys(widgetRegistry);
+
+  const boraWidget = widgetSelectValue
+    ? widgetRegistry[widgetSelectValue as WidgetType]
+    : null;
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    const widgetType = widgetSelectValue as WidgetType;
+    if (!widgetType || !boraWidget) {
+      alert("Please select a widget type.");
+      return;
+    }
+
+    const processFormData = boraWidget.parseForm(dashboard.id, formData);
+
+    alert("Widget created with data: " + JSON.stringify(processFormData));
+  };
 
   return (
     <Dialog>
-        <DialogTrigger asChild>
-            <Button>
-                <FontAwesomeIcon icon={faPlus} />
-                New Widget
-            </Button>
-        </DialogTrigger>
+      <DialogTrigger asChild>
+        <Button>
+          <FontAwesomeIcon icon={faPlus} />
+          New Widget
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create New Widget</DialogTitle>
@@ -61,38 +79,44 @@ dashboard
             <SelectValue placeholder="Select a widget..." />
           </SelectTrigger>
           <SelectContent>
-           {widgetEntries.map(([key, value]) => (
-              <SelectItem key={key} value={key}>
-                {value.name}
+            {widgetNames.map((name, idx) => (
+              <SelectItem key={idx} value={name}>
+                {name}
               </SelectItem>
             ))}
-
-          
-
-            
           </SelectContent>
         </Select>
-        <form className="w-full mt-4 space-y-4">
-          {widgetSelectValue  ? (
+  <form onSubmit={handleSubmit} className="w-full mt-4 space-y-4">
+          {widgetSelectValue ? (
             (() => {
-              const FormComponent = WIDGET_MAP[widgetSelectValue as keyof typeof WIDGET_MAP].form;
-              return <FormComponent />;
+              if (!boraWidget) {
+                return (
+                  <div className="text-sm text-red-500">
+                    Bora widget "{widgetSelectValue}" does not have a
+                    configuration form.
+                  </div>
+                );
+              } else {
+                const FormComponent = boraWidget.renderForm();
+                return <FormComponent />;
+              }
             })()
           ) : (
-            <div className="text-sm text-gray-500">Please select a widget type to configure its properties.</div>
+            <div className="text-sm text-gray-500">
+              Please select a widget type to configure its properties.
+            </div>
           )}
+          <DialogFooter className="sm:justify-start mt-4">
+            <Button type="submit" className="w-full sm:w-auto">
+              Create Widget
+            </Button>
+            <DialogClose asChild>
+              <Button variant="secondary" className="w-full sm:w-auto">
+                Cancel
+              </Button>
+            </DialogClose>
+          </DialogFooter>
         </form>
-        <DialogFooter className="sm:justify-start mt-4">
-             <Button type="submit" form="new-widget-form" className="w-full sm:w-auto">
-            Create Widget
-          </Button>
-          <DialogClose asChild>
-            <Button variant="secondary" className="w-full sm:w-auto">Cancel</Button>
-          </DialogClose>
-       
-        </DialogFooter>
-
-
       </DialogContent>
     </Dialog>
   );

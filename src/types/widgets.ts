@@ -1,15 +1,16 @@
-export type Point = { x: number; y: number }; // in percentage of dashboard size
+import { registerWidget } from "@/lib/decorators";
 
+export type Point = { x: number; y: number }; // in percentage of dashboard size
 // ========== Base Widget Types ==========
 
 // All widgets share these properties
-export interface BaseWidget {
+export interface IBaseWidget {
     id: string;
     position: Point;
     width: number;
     height: number;
     dashboardId: string;
-    type: WidgetType;
+    type: string;
 }
 
 // ========== Data Source Types ==========
@@ -49,9 +50,9 @@ export type IconFormat = { icon: string }; // e.g., "fa-solid fa-check"
 
 type FontWeight = "normal" | "bold";
 
-// --- Text Widget ---
-export interface TextWidget extends BaseWidget {
-    type: "TEXT";
+
+export interface ITextWidget extends IBaseWidget {
+    type: "Text";
     textContent: string;
     fontSize?: number;
     fontWeight?: FontWeight;
@@ -61,15 +62,13 @@ export interface TextWidget extends BaseWidget {
 
 // --- Data-Driven Widgets ---
 
-// Base for any widget that displays data
-export interface DataDrivenWidget extends BaseWidget {
-    dataSource: DataSource;
-    value: number; // The resolved value from the data source
-}
+
 
 // --- Value Widget (Displays data as text) ---
-export interface ValueWidget extends DataDrivenWidget {
-    type: "VALUE";
+export interface IValueWidget extends IBaseWidget {
+    dataSource: DataSource;
+    value: number; // The resolved value from the data source
+    type: "Value";
     textContent?: string; // Optional label
     unit?: string;
     decimalPlaces?: number;
@@ -82,16 +81,11 @@ export interface ValueWidget extends DataDrivenWidget {
 }
 
 // --- Icon Widget (Displays data as an icon) ---
-export interface IconWidget extends DataDrivenWidget {
-    type: "ICON";
+export interface IIconWidget extends IBaseWidget {
+    dataSource: DataSource;
+    value: number; // The resolved value from the data source
+    type: "Icon";
     defaultIcon: string; // Fallback icon
     conditions: ConditionalRule<IconFormat>[];
 }
 
-
-
-
-export type Widget = TextWidget | ValueWidget | IconWidget;
-
-// Discriminated union key
-export type WidgetType = Widget['type']; // "TEXT" | "VALUE" | "ICON"

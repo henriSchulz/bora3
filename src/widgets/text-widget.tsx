@@ -1,11 +1,7 @@
-import { TextWidget } from "@/types/widgets";
-import { FC } from "react";
-import { Widget as PrismaWidget } from "@prisma/client";
-import { BaseWidget } from "@/types/widgets";
-import { getBaseWidgetProperties } from "../_lib/widgetMapperFunctions";
+import { ITextWidget } from "@/types/widgets";
+import { BoraWidget } from "./core/bora-widget";
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -14,21 +10,68 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {z } from "zod";
+import { FC } from "react";
+import { registerWidget } from "@/lib/decorators";
+import { WidgetType } from "./core/autogen";
 
+@registerWidget("Text")
+export class TextWidget extends BoraWidget<ITextWidget> {
+  public constructor() {
+      const textWidgetSchema = z.object({
+        textContent: z.string().min(1, "Text content is required"),
+        fontSize: z.number().min(1, "Font size must be at least 1").optional().default(14),
+        fontWeight: z.enum(['normal', 'bold']).optional().default('normal'),
+        backgroundColor: z.string().optional().default('transparent'),
+        defaultTextColor: z.string().optional().default('black'),
+        width: z.number().optional().default(100),
+        height: z.number().optional().default(50),
+    })
+    super(textWidgetSchema);
+  }
 
-export const textWidgetSchema = z.object({
-  textContent: z.string().min(1, "Text content is required"),
-  fontSize: z.number().min(1, "Font size must be at least 1").optional().default(14),
-  fontWeight: z.enum(['normal', 'bold']).optional().default('normal'),
-  backgroundColor: z.string().optional().default('transparent'),
-  defaultTextColor: z.string().optional().default('black'),
-  width: z.number().optional().default(100),
-  height: z.number().optional().default(50),
-})
+  public render(): FC<{ widget: ITextWidget; }> {
+    return TextWidgetComponent;
+  }
 
+  public renderForm(): FC<{ widget?: ITextWidget; }> {
+    return TextWidgetForm;
+  }
 
+  public parseForm(
+    dashboardId: string,
+    formData: FormData
+  ): { widget?: Omit<ITextWidget, "id">; error?: string } {
+    const textContent = formData.get("textContent") as string;
+    if (!textContent || textContent.trim().length === 0) {
+      return { error: "Text content is required" };
+    }
+    const fontSize = formData.get("fontSize") ? parseInt(formData.get("fontSize") as string, 10) : 14;
+    const fontWeight = (formData.get("fontWeight") as string) || 'normal';
+    const backgroundColor = (formData.get("backgroundColor") as string) || 'transparent';
+    const defaultTextColor = (formData.get("defaultTextColor") as string) || 'black';
+    const width = formData.get("width") ? parseInt(formData.get("width") as string, 10) : 100;
+    const height = formData.get("height") ? parseInt(formData.get("height") as string, 10) : 50;
 
-export function TextWidgetForm({ widget }: { widget?: TextWidget }) {
+    const position = { x: 0.2, y: 0.2 };
+
+    return {
+      widget: {
+        type: "Text",
+        position,
+        dashboardId,
+        textContent,
+        fontSize,
+        fontWeight: fontWeight as "normal" | "bold",
+        backgroundColor,
+        defaultTextColor,
+        width,
+        height,
+      }
+    };
+  }
+}
+
+export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
   const isEditMode = !!widget;
 
   return (
@@ -138,8 +181,7 @@ export function TextWidgetForm({ widget }: { widget?: TextWidget }) {
 
 
 
-
-export function TextWidgetComponent({ widget }: { widget: TextWidget }) {
+export function TextWidgetComponent({ widget }: { widget: ITextWidget }) {
   const {
     textContent,
     fontSize = 16,

@@ -3,18 +3,18 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { DndContext, DragEndEvent, DragStartEvent, DragCancelEvent } from '@dnd-kit/core';
 import WidgetRenderer from './widget-renderer';
-import { Widget } from '@/types/widgets';
+import {IWidget} from '@/widgets/core/autogen';
 import { Dashboard } from '@prisma/client';
 import { updatePositions } from '../actions';
 
 interface DashboardCanvasProps {
-  initialWidgets: Widget[];
+  initialWidgets: IWidget[];
   dashboard: Dashboard;
 }
 
 export default function DashboardCanvas({ initialWidgets, dashboard }: DashboardCanvasProps) {
   const [editMode, setEditMode] = useState(false);
-  const [widgets, setWidgets] = useState<Widget[]>(initialWidgets);
+  const [widgets, setWidgets] = useState<IWidget[]>(initialWidgets);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 

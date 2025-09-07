@@ -1,48 +1,66 @@
-import { IconWidget } from "@/types/widgets";
-import {z} from "zod";
+import { IIconWidget } from "@/types/widgets";
+import { z } from "zod";
 import { Condition } from "@/types/widgets";
+import { BoraWidget } from "./core/bora-widget";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FC } from "react";
+import { registerWidget } from "@/lib/decorators";
 
+@registerWidget("Icon")
+export class IconWidget extends BoraWidget<IIconWidget> {
+  public constructor() {
+    const iconWidgetSchema = z.object({
+      dataId: z.string().optional(),
+      expression: z.string().optional(),
+      dataIds: z.array(z.string()).optional(),
+      value: z.number().optional(),
+      defaultIcon: z.string().optional(),
+      conditions: z
+        .array(
+          z.object({
+            condition: z.enum(Object.values(Condition)),
 
-export const iconWidgetSchema = z.object({
-    dataId: z.string().optional(),
-    expression: z.string().optional(),
-    dataIds: z.array(z.string()).optional(),
-    value: z.number().optional(),
-    defaultIcon: z.string().optional(),
-    conditions: z.array(z.object({
-        condition: z.enum(Object.values(Condition)) ,
-        
-        value: z.union([z.number(), z.array(z.number())]),
-        format: z.object({
-            icon: z.string()
-        })
-    })).optional()
-});
+            value: z.union([z.number(), z.array(z.number())]),
+            format: z.object({
+              icon: z.string(),
+            }),
+          })
+        )
+        .optional(),
+    });
+    super(iconWidgetSchema);
+  }
 
+  public render(): FC<{ widget: IIconWidget }> {
+    return IconWidgetComponent;
+  }
 
-// export function toIconWidget(widget: PrismaWidget, value: number = 0): IconWidget {
-//     const baseProps = getBaseWidgetProperties(widget);
-//     const properties = widget.properties as any;
+  public renderForm(): FC<{ widget?: IIconWidget }> {
+    return IconWidgetForm;
+  }
 
-//     const dataSource: DataSource = properties.expression
-//         ? { type: 'calculation', expression: properties.expression, dataIds: properties.dataIds || [] }
-//         : { type: 'database', dataId: properties.dataId || '' };
+  public parseForm(dashboardId: string,formData: FormData): {widget?: Omit<IIconWidget, "id">, error?: string} {
+    return {error: "Not implemented yet"};
+  }
 
-//     return {
-//         ...baseProps,
-//         type: "ICON",
-//         dataSource,
-//         value,
-//         defaultIcon: properties?.defaultIcon || 'fa-solid fa-question',
-//         conditions: properties?.conditions || [],
-//     };
-// }
+  
 
+}
 
-export function IconWidgetComponent({
-  widget,
-}: {
-  widget: IconWidget;
-}) {
+export function IconWidgetComponent({ widget }: { widget: IIconWidget }) {
   return <div>Icon Widget</div>;
+}
+
+export function IconWidgetForm({ widget }: { widget?: IIconWidget }) {
+  const isEditMode = !!widget;
+
+  return <div>Icon Widget Form</div>;
 }

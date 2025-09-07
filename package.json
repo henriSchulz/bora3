@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "generate:widgets": "node scripts/generate-widget-registry.js",
+    "dev": "npm run generate:widgets && next dev --turbopack",
+    "build": "npm run generate:widgets && next build --turbopack",
     "start": "next start",
     "prisma": "npx prisma migrate dev --name init && npx prisma generate"
   },
