@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Widget as PrismaWidget } from "@prisma/client";
 import { FC } from "react";
 import { registerWidget } from "@/lib/decorators";
 
@@ -47,7 +48,7 @@ export class IconWidget extends BoraWidget<IIconWidget> {
     return IconWidgetForm;
   }
 
-  public parseForm(dashboardId: string,formData: FormData): {widget?: Omit<IIconWidget, "id">, error?: string} {
+  public parseForm(dashboardId: string,formData: FormData): {widget?: Omit<PrismaWidget, "id" | "createAt" | "updatedAt">, error?: string} {
     return {error: "Not implemented yet"};
   }
 

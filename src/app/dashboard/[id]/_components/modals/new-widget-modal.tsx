@@ -55,6 +55,16 @@ export default function NewWidgetModal({
 
     const processFormData = boraWidget.parseForm(dashboard.id, formData);
 
+    if (processFormData.error) {
+      alert("Error: " + processFormData.error);
+      return;
+    }
+
+    // For demonstration, we just alert the processed form data.
+    // In a real app, you would send this data to your backend to create the widget.
+
+    
+
     alert("Widget created with data: " + JSON.stringify(processFormData));
   };
 

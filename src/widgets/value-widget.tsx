@@ -4,7 +4,7 @@ import { IValueWidget, Condition } from "@/types/widgets";
 import { FC } from "react";
 import { registerWidget } from "@/lib/decorators";
 
-
+import { Widget as PrismaWidget } from "@prisma/client";
 
 @registerWidget("Value")
 export class ValueWidget extends BoraWidget<IValueWidget> {
@@ -43,7 +43,7 @@ export class ValueWidget extends BoraWidget<IValueWidget> {
     return () => <div>Value Widget Form - To be implemented</div>;
   }
 
-  public parseForm(dashboardId: string, formData: FormData): {widget?: Omit<IValueWidget, "id">, error?: string} {
+  public parseForm(dashboardId: string, formData: FormData): {widget?: Omit<PrismaWidget, "id" | "createdAt" | "updatedAt">, error?: string} {
     return {error: "Not implemented yet"};
   }
 

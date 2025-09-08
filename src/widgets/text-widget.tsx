@@ -1,7 +1,7 @@
 import { ITextWidget } from "@/types/widgets";
 import { BoraWidget } from "./core/bora-widget";
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -9,66 +9,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {z } from "zod";
+import { z } from "zod";
 import { FC } from "react";
 import { registerWidget } from "@/lib/decorators";
 import { WidgetType } from "./core/autogen";
+import { Widget as PrismaWidget } from "@prisma/client";
 
 @registerWidget("Text")
 export class TextWidget extends BoraWidget<ITextWidget> {
   public constructor() {
-      const textWidgetSchema = z.object({
-        textContent: z.string().min(1, "Text content is required"),
-        fontSize: z.number().min(1, "Font size must be at least 1").optional().default(14),
-        fontWeight: z.enum(['normal', 'bold']).optional().default('normal'),
-        backgroundColor: z.string().optional().default('transparent'),
-        defaultTextColor: z.string().optional().default('black'),
-        width: z.number().optional().default(100),
-        height: z.number().optional().default(50),
-    })
+    const textWidgetSchema = z.object({
+      textContent: z.string(
+        "Text content must be a string"
+      ).min(1, "Text content is required"),
+      fontSize: z
+        .number("Font size must be a number")
+        .min(1, "Font size must be at least 1")
+        .optional()
+        .default(14),
+      fontWeight: z.enum(["normal", "bold"]).optional().default("normal"),
+      backgroundColor: z.string().optional().default("transparent"),
+      defaultTextColor: z.string().optional().default("black"),
+      width: z.number(
+        "Width must be a number"
+      )
+      .min(10, "Width must be at least 10")
+      .optional().default(100),
+      height: z.number(
+        "Height must be a number"
+      )
+      .min(10, "Height must be at least 10")
+      .default(50).optional(),
+    });
     super(textWidgetSchema);
   }
 
-  public render(): FC<{ widget: ITextWidget; }> {
+  public render(): FC<{ widget: ITextWidget }> {
     return TextWidgetComponent;
   }
 
-  public renderForm(): FC<{ widget?: ITextWidget; }> {
+  public renderForm(): FC<{ widget?: ITextWidget }> {
     return TextWidgetForm;
   }
 
-  public parseForm(
-    dashboardId: string,
-    formData: FormData
-  ): { widget?: Omit<ITextWidget, "id">; error?: string } {
-    const textContent = formData.get("textContent") as string;
-    if (!textContent || textContent.trim().length === 0) {
-      return { error: "Text content is required" };
-    }
-    const fontSize = formData.get("fontSize") ? parseInt(formData.get("fontSize") as string, 10) : 14;
-    const fontWeight = (formData.get("fontWeight") as string) || 'normal';
-    const backgroundColor = (formData.get("backgroundColor") as string) || 'transparent';
-    const defaultTextColor = (formData.get("defaultTextColor") as string) || 'black';
-    const width = formData.get("width") ? parseInt(formData.get("width") as string, 10) : 100;
-    const height = formData.get("height") ? parseInt(formData.get("height") as string, 10) : 50;
-
-    const position = { x: 0.2, y: 0.2 };
-
-    return {
-      widget: {
-        type: "Text",
-        position,
-        dashboardId,
-        textContent,
-        fontSize,
-        fontWeight: fontWeight as "normal" | "bold",
-        backgroundColor,
-        defaultTextColor,
-        width,
-        height,
-      }
-    };
-  }
 }
 
 export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
@@ -84,7 +67,7 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
           id="textContent"
           type="text"
           name="textContent"
-          defaultValue={widget?.textContent || ''}
+          defaultValue={widget?.textContent || ""}
           placeholder="Enter text content"
           className="w-full"
         />
@@ -104,15 +87,21 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
           />
         </div>
         <div className="flex-1">
-          <Label htmlFor="fontWeight" className="mb-2 block text-sm font-medium">
+          <Label
+            htmlFor="fontWeight"
+            className="mb-2 block text-sm font-medium"
+          >
             Font Weight
           </Label>
-          <Select name="fontWeight" defaultValue={widget?.fontWeight || 'normal'}>
+          <Select
+            name="fontWeight"
+            defaultValue={widget?.fontWeight || "normal"}
+          >
             <SelectTrigger id="fontWeight" className="w-full">
               <SelectValue placeholder="Select font weight" />
             </SelectTrigger>
             <SelectContent>
-              {['normal', 'bold'].map((weight) => (
+              {["normal", "bold"].map((weight) => (
                 <SelectItem key={weight} value={weight}>
                   {weight.charAt(0).toUpperCase() + weight.slice(1)}
                 </SelectItem>
@@ -123,26 +112,32 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
       </div>
       <div className="flex gap-4">
         <div className="flex-1">
-          <Label htmlFor="backgroundColor" className="mb-2 block text-sm font-medium">
+          <Label
+            htmlFor="backgroundColor"
+            className="mb-2 block text-sm font-medium"
+          >
             Background Color
           </Label>
           <Input
             name="backgroundColor"
             id="backgroundColor"
             type="color"
-            defaultValue={widget?.backgroundColor || '#ffffff'}
+            defaultValue={widget?.backgroundColor || "#ffffff"}
             className="w-full h-10 p-0 border-0"
           />
         </div>
         <div className="flex-1">
-          <Label htmlFor="defaultTextColor" className="mb-2 block text-sm font-medium">
+          <Label
+            htmlFor="defaultTextColor"
+            className="mb-2 block text-sm font-medium"
+          >
             Default Text Color
           </Label>
           <Input
-          name="defaultTextColor"
+            name="defaultTextColor"
             id="defaultTextColor"
             type="color"
-            defaultValue={widget?.defaultTextColor || '#000000'}
+            defaultValue={widget?.defaultTextColor || "#000000"}
             className="w-full h-10 p-0 border-0"
           />
         </div>
@@ -179,8 +174,6 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
   );
 }
 
-
-
 export function TextWidgetComponent({ widget }: { widget: ITextWidget }) {
   const {
     textContent,
@@ -192,12 +185,12 @@ export function TextWidgetComponent({ widget }: { widget: ITextWidget }) {
 
   const containerStyle = {
     backgroundColor,
-    height: '100%',
-    width: '100%',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '10px'
+    height: "100%",
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: "10px",
   };
 
   const textStyle = {
@@ -212,5 +205,3 @@ export function TextWidgetComponent({ widget }: { widget: ITextWidget }) {
     </div>
   );
 }
-
-
