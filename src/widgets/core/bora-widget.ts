@@ -24,9 +24,9 @@ export abstract class BoraWidget<T extends IBaseWidget> {
     };
   } // Extracts and returns the base properties common to all widgets
 
-  public abstract render(): FC<{ widget: T }>;
+  //public abstract render(): FC<{ widget: T }>;
 
-  public abstract renderForm(): FC<{ widget?: T }>; // widget is undefined when creating a new widget and defined when an existing widget is edited
+  //public abstract renderForm(): FC<{ widget?: T }>; // widget is undefined when creating a new widget and defined when an existing widget is edited
 
 
 

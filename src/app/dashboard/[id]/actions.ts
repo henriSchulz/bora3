@@ -1,26 +1,24 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { Dashboard} from "@prisma/client";
 import { Widget as PrismaWidget } from "@prisma/client";
-import { Widget } from "@/types/widgets";
 import { transformWidgets } from "./_lib/transformWidgets";
 import { fetchDataForWidgets } from "./_lib/redis";
 import { revalidatePath } from "next/cache";
+import { IWidget } from "@/widgets/core/autogen";
 
 
-
-export async function loadWidgets(dashboardId: string): Promise<Widget[]> {
+export async function loadWidgets(dashboardId: string): Promise<IWidget[]> {
     const widgets: PrismaWidget[] = await prisma.widget.findMany({where: {dashboardId}});
 
     const data = await fetchDataForWidgets(widgets);
 
-    const frontendWidgets: Widget[] = await transformWidgets(widgets, data);
+    const frontendWidgets: IWidget[] = await transformWidgets(widgets, data);
 
     return frontendWidgets;
 }
 
-export async function updatePositions(dashboardId: string, updatedWidgets: Widget[]) {
+export async function updatePositions(dashboardId: string, updatedWidgets: IWidget[]) {
     const updatePromises = updatedWidgets.map(widget => {
         return prisma.widget.update({
             where: { id: widget.id },

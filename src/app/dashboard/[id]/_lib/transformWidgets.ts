@@ -1,6 +1,12 @@
+"use client";
+
 import { Widget as PrismaWidget } from "@prisma/client";
 
-import { IWidget, widgetRegistry, WidgetType } from "@/widgets/core/autogen";
+import { IWidget, WidgetType } from "@/widgets/core/autogen";
+import { widgetRegistry } from "@/widgets/core/autogen.client";
+import { IconWidget } from '@/widgets/icon-widget';
+import { TextWidget } from '@/widgets/text-widget';
+import { ValueWidget } from '@/widgets/value-widget';
 
 /*
 ====== General Widget Mapping Functions ======
@@ -15,11 +21,16 @@ export async function transformWidgets(widgets: PrismaWidget[], data: Record<str
     return widgets.map(widget => {
         const type = widget.type as WidgetType
         const props = widget.properties as any;
-
-        const boraWidget = widgetRegistry[type];
-        if (!boraWidget) {
-            throw new Error(`Unknown widget type: ${widget.type}`);
+        
+    
+                // Instantiate only the needed widget class server-side for fromDB logic.
+                // (Could be optimized with a factory map if many widgets.)
+        const instance = widgetRegistry[type];
+        
+        if (!instance) {
+            throw new Error(`No widget registered for type: ${type}`);
         }
+
         
         let value: number = 0;
 
@@ -31,7 +42,7 @@ export async function transformWidgets(widgets: PrismaWidget[], data: Record<str
             // calculate value based on expression and dataIds
             value = -1; // Placeholder for actual calculation logic
         }
-        return {...boraWidget.fromDB(widget), value}
+    return {...instance.fromDB(widget), value}
     });
 }
 

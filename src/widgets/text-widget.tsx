@@ -1,3 +1,5 @@
+"use client";
+
 import { ITextWidget } from "@/types/widgets";
 import { BoraWidget } from "./core/bora-widget";
 import { Input } from "@/components/ui/input";
@@ -10,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { z } from "zod";
-import { FC } from "react";
+import { FC, useState } from "react";
 import { registerWidget } from "@/lib/decorators";
 import { WidgetType } from "./core/autogen";
 import { Widget as PrismaWidget } from "@prisma/client";
@@ -57,6 +59,8 @@ export class TextWidget extends BoraWidget<ITextWidget> {
 export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
   const isEditMode = !!widget;
 
+  const [textContent, setTextContent] = useState(widget?.textContent || "");
+  
   return (
     <div className="space-y-4">
       <div>
@@ -67,7 +71,9 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
           id="textContent"
           type="text"
           name="textContent"
-          defaultValue={widget?.textContent || ""}
+
+          value={textContent}
+          onChange={(e) => setTextContent(e.target.value)}
           placeholder="Enter text content"
           className="w-full"
         />

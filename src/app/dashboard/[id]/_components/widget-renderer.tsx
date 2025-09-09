@@ -2,7 +2,7 @@
 
 import { FC, CSSProperties, useEffect, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { widgetRegistry, IWidget } from "@/widgets/core/autogen";
+import { widgetRegistry, IWidget } from "@/widgets/core/autogen.client";
 
 import {
   ContextMenu,
@@ -50,7 +50,12 @@ export default function WidgetRenderer({
     height: widget.height,
     cursor: editMode ? "move" : "default",
     transform: "translate(-50%, -50%)",
-    border: editMode ? "2px dashed gray" : "none",
+  // Verhindere Layout-Shift beim Ein-/Ausschalten des Edit-Modus:
+  // 1. Immer gleich breite (1px) Border reservieren -> wenn nicht EditMode transparent
+  // 2. boxSizing border-box, damit die Border nicht das visuelle Zentrum verschiebt
+  boxSizing: "border-box",
+  border: "1px dashed",
+  borderColor: editMode ? "gray" : "transparent",
   };
 
   if (transform) {

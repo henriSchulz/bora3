@@ -27,7 +27,7 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { IWidget, widgetRegistry, WidgetType } from "@/widgets/core/autogen";
+import { IWidget, widgetRegistry, WidgetType } from "@/widgets/core/autogen.client";
 import { useState } from "react";
 
 export default function NewWidgetModal({
