@@ -1,7 +1,3 @@
-"use client";
-
-import { ITextWidget } from "@/types/widgets";
-import { BoraWidget } from "./core/bora-widget";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -10,68 +6,60 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { z } from "zod";
-import { FC, useState } from "react";
-import { registerWidget } from "@/lib/decorators";
-import { WidgetType } from "./core/autogen";
-import { Widget as PrismaWidget } from "@prisma/client";
+} from "@/components/ui/select"; 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
 
-@registerWidget("Text")
-export class TextWidget extends BoraWidget<ITextWidget> {
-  public constructor() {
-    const textWidgetSchema = z.object({
-      textContent: z.string(
-        "Text content must be a string"
-      ).min(1, "Text content is required"),
-      fontSize: z
-        .number("Font size must be a number")
-        .min(1, "Font size must be at least 1")
-        .optional()
-        .default(14),
-      fontWeight: z.enum(["normal", "bold"]).optional().default("normal"),
-      backgroundColor: z.string().optional().default("transparent"),
-      defaultTextColor: z.string().optional().default("black"),
-      width: z.number(
-        "Width must be a number"
-      )
-      .min(10, "Width must be at least 10")
-      .optional().default(100),
-      height: z.number(
-        "Height must be a number"
-      )
-      .min(10, "Height must be at least 10")
-      .default(50).optional(),
-    });
-    super(textWidgetSchema);
-  }
+import { useEffect, useState } from "react";
 
-  public render(): FC<{ widget: ITextWidget }> {
-    return TextWidgetComponent;
-  }
+import { ITextWidget } from "@/types/widgets";
 
-  public renderForm(): FC<{ widget?: ITextWidget }> {
-    return TextWidgetForm;
-  }
+import { Button } from "@/components/ui/button";
 
-}
+
+
 
 export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
   const isEditMode = !!widget;
 
   const [textContent, setTextContent] = useState(widget?.textContent || "");
+  const [fontSize, setFontSize] = useState(widget?.fontSize || 16);
+  const [fontWeight, setFontWeight] = useState(widget?.fontWeight || "normal");
+  const [backgroundColor, setBackgroundColor] = useState(
+    widget?.backgroundColor || "transparent"
+  );
+  const [defaultTextColor, setDefaultTextColor] = useState(
+    widget?.defaultTextColor || "#000000"
+  );
+  const [width, setWidth] = useState(widget?.width || 200);
+  const [height, setHeight] = useState(widget?.height || 100);
+
+  
+  function calcPerfectHeightWidth() {
+    if(!isEditMode) {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      if(context) {
+        context.font = `${fontWeight} ${fontSize}px sans-serif`;
+        const textMetrics = context.measureText(textContent || "Preview Text");
+        const padding = 20; // add some padding
+        setWidth(Math.round(textMetrics.width + padding));
+        setHeight(Math.round(fontSize + padding));
+      }
+    }
+  }
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-hidden">
       <div>
         <Label htmlFor="textContent" className="mb-2 block text-sm font-medium">
           Text Content
         </Label>
         <Input
+        required
           id="textContent"
           type="text"
           name="textContent"
-
           value={textContent}
           onChange={(e) => setTextContent(e.target.value)}
           placeholder="Enter text content"
@@ -87,7 +75,8 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
             id="fontSize"
             type="number"
             name="fontSize"
-            defaultValue={widget?.fontSize || 16}
+            value={fontSize}
+            onChange={(e) => setFontSize(Number(e.target.value))}
             placeholder="Enter font size"
             className="w-full"
           />
@@ -101,7 +90,8 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
           </Label>
           <Select
             name="fontWeight"
-            defaultValue={widget?.fontWeight || "normal"}
+            value={fontWeight}
+            onValueChange={setFontWeight}
           >
             <SelectTrigger id="fontWeight" className="w-full">
               <SelectValue placeholder="Select font weight" />
@@ -127,8 +117,9 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
           <Input
             name="backgroundColor"
             id="backgroundColor"
-            type="color"
-            defaultValue={widget?.backgroundColor || "#ffffff"}
+           // type="color"
+            value={backgroundColor}
+            onChange={(e) => setBackgroundColor(e.target.value)}
             className="w-full h-10 p-0 border-0"
           />
         </div>
@@ -143,39 +134,65 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
             name="defaultTextColor"
             id="defaultTextColor"
             type="color"
-            defaultValue={widget?.defaultTextColor || "#000000"}
+            value={defaultTextColor}
+            onChange={(e) => setDefaultTextColor(e.target.value)}
             className="w-full h-10 p-0 border-0"
           />
         </div>
       </div>
-      <div className="flex gap-4">
+      <div className="flex gap-4 mb-2 items-end">
         <div className="flex-1">
-          <Label htmlFor="boxWidth" className="mb-2 block text-sm font-medium">
-            Box Width (px)
+          <Label htmlFor="boxWidth" className="block text-sm font-medium">
+        Box Width (px)
           </Label>
           <Input
-            name="width"
-            id="boxWidth"
-            type="number"
-            defaultValue={widget?.width || 200}
-            placeholder="Enter box width"
-            className="w-full"
+          min={1}
+        name="width"
+        id="boxWidth"
+        type="number"
+        value={width}
+        onChange={(e) => setWidth(Number(e.target.value))}
+        placeholder="Enter box width"
+        className="w-full"
           />
         </div>
         <div className="flex-1">
-          <Label htmlFor="boxHeight" className="mb-2 block text-sm font-medium">
-            Box Height (px)
+          <Label htmlFor="boxHeight" className="block text-sm font-medium">
+        Box Height (px)
           </Label>
           <Input
-            name="height"
-            id="boxHeight"
-            type="number"
-            defaultValue={widget?.height || 100}
-            placeholder="Enter box height"
-            className="w-full"
+        name="height"
+        id="boxHeight"
+        type="number"
+        value={height}
+        onChange={(e) => setHeight(Number(e.target.value))}
+        min={1}
+        placeholder="Enter box height"
+        className="w-full"
           />
+        </div>
+        <div className="flex-1">
+            <Label style={{visibility: "hidden"}} className="block text-sm font-medium">
+        Box Width (px)
+          </Label>
+          
+          <Button type="button" className="w-full" onClick={calcPerfectHeightWidth}>
+        <FontAwesomeIcon icon={faWandMagicSparkles}  />
+          </Button>
         </div>
       </div>
+              <hr />
+        <div className="flex justify-center w-full m-4">
+          <div
+            className="border p-2 flex items-center justify-center"
+            style={{ width: `${width}px`, height: `${height}px`, backgroundColor }}
+          >
+            <span style={{ color: defaultTextColor, fontSize: `${fontSize}px`, fontWeight }}>
+              {textContent || "Preview Text"}
+            </span>
+            </div>
+
+        </div>
     </div>
   );
 }
@@ -191,12 +208,6 @@ export function TextWidgetComponent({ widget }: { widget: ITextWidget }) {
 
   const containerStyle = {
     backgroundColor,
-    height: "100%",
-    width: "100%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: "10px",
   };
 
   const textStyle = {

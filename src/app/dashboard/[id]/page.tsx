@@ -1,16 +1,11 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Dashboard } from "@prisma/client";
 
-import styles from "./Dashboard.module.css";
-import { Button } from "@/components/ui/button";
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { loadWidgets } from "./actions";
-import WidgetRenderer from "./_components/widget-renderer";
 import DashboardCanvas from "./_components/dashboard-canvas";
 import NewWidgetModal from "./_components/modals/new-widget-modal";
+import { Dashboard } from "@prisma/client";
 
 export default async function DashboardPage({
   params,

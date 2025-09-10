@@ -25,10 +25,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { IWidget, widgetRegistry, WidgetType } from "@/widgets/core/autogen.client";
+import { WidgetType } from "@/widgets/core/autogen.types";
+import { widgetUIRegistry } from "@/widgets/core/autogen.ui";
+import { widgetLogicRegistry } from "@/widgets/core/autogen.logic";
 import { useState } from "react";
+import { createWidget } from "../../actions";
 
 export default function NewWidgetModal({
   dashboard,
@@ -37,35 +38,34 @@ export default function NewWidgetModal({
 }) {
   const [widgetSelectValue, setWidgetSelectValue] = useState<string>();
 
-  const widgetNames = Object.keys(widgetRegistry);
+  const widgetNames = Object.keys(widgetLogicRegistry);
 
   const boraWidget = widgetSelectValue
-    ? widgetRegistry[widgetSelectValue as WidgetType]
+    ? widgetLogicRegistry[widgetSelectValue as WidgetType]
     : null;
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
     const widgetType = widgetSelectValue as WidgetType;
+
     if (!widgetType || !boraWidget) {
       alert("Please select a widget type.");
       return;
     }
 
-    const processFormData = boraWidget.parseForm(dashboard.id, formData);
-
-    if (processFormData.error) {
-      alert("Error: " + processFormData.error);
-      return;
-    }
-
-    // For demonstration, we just alert the processed form data.
-    // In a real app, you would send this data to your backend to create the widget.
-
     
 
-    alert("Widget created with data: " + JSON.stringify(processFormData));
+    const { errors } = await createWidget(dashboard.id, widgetType, formData);
+
+    if (errors.length > 0) {
+      return alert("Failed to create widget: " + errors.join(", "));
+    }
+
+    window.location.reload();
+
+   
   };
 
   return (
@@ -96,7 +96,7 @@ export default function NewWidgetModal({
             ))}
           </SelectContent>
         </Select>
-  <form onSubmit={handleSubmit} className="w-full mt-4 space-y-4">
+        <form onSubmit={handleSubmit} className="w-full mt-4 space-y-4">
           {widgetSelectValue ? (
             (() => {
               if (!boraWidget) {
@@ -107,7 +107,8 @@ export default function NewWidgetModal({
                   </div>
                 );
               } else {
-                const FormComponent = boraWidget.renderForm();
+                const FormComponent =
+                  widgetUIRegistry[widgetSelectValue as WidgetType]!.form;
                 return <FormComponent />;
               }
             })()

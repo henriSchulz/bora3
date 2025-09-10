@@ -15,7 +15,19 @@
 export function registerWidget(type: string) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return function (constructor: any) {
-    // Diese Funktion bleibt leer. Ihre einzige Aufgabe ist es,
-    // im Code zu existieren, damit der Generator sie finden kann.
+    // Speichere den Typ als statische Eigenschaft auf der Klasse,
+    // damit der Basisklassen-Code (z.B. parseForm) darauf zugreifen kann.
+    try {
+      // Set as a non-enumerable static property to avoid accidental serialization
+      Object.defineProperty(constructor, "widgetType", {
+        value: type,
+        writable: false,
+        configurable: false,
+        enumerable: false,
+      });
+    } catch {
+      // Fallback in environments where defineProperty might fail
+      (constructor as any).widgetType = type;
+    }
   };
 }

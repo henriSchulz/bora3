@@ -3,7 +3,7 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { DndContext, DragEndEvent, DragStartEvent, DragCancelEvent } from '@dnd-kit/core';
 import WidgetRenderer from './widget-renderer';
-import {IWidget} from '@/widgets/core/autogen';
+import {IWidget} from '@/widgets/core/autogen.types';
 import { Dashboard } from '@prisma/client';
 import { updatePositions } from '../actions';
 
@@ -119,7 +119,6 @@ export default function DashboardCanvas({ initialWidgets, dashboard }: Dashboard
   }
 
   function handleDragCancel(event: DragCancelEvent) {
-    
     document.body.classList.remove('dragging-no-scroll');
   }
 

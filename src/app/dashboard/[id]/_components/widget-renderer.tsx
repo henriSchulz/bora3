@@ -2,7 +2,8 @@
 
 import { FC, CSSProperties, useEffect, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { widgetRegistry, IWidget } from "@/widgets/core/autogen.client";
+import {  IWidget } from "@/widgets/core/autogen.types";
+import { widgetUIRegistry } from "@/widgets/core/autogen.ui";
 
 import {
   ContextMenu,
@@ -15,7 +16,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencil, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 import DeleteWidgetModal from "./modals/delete-widget-modal";
-import { ITextWidget } from "@/types/widgets";
 
 export default function WidgetRenderer({
   widget,
@@ -24,13 +24,12 @@ export default function WidgetRenderer({
   widget: IWidget;
   editMode: boolean;
 }) {
-
-  const boraWidget = widgetRegistry[widget.type];
-  if(!boraWidget) {
+  const uiWidget = widgetUIRegistry[widget.type];
+  if(!uiWidget) {
     throw new Error(`No widget found for type: ${widget.type}`);
   }
 
-  const Component = boraWidget.render();
+  const Component = uiWidget.component as FC<{ widget: IWidget }>;
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: widget.id,
@@ -50,6 +49,9 @@ export default function WidgetRenderer({
     height: widget.height,
     cursor: editMode ? "move" : "default",
     transform: "translate(-50%, -50%)",
+    overflow: "hidden",
+    // add word break if not enough space
+    wordBreak: "break-word",
   // Verhindere Layout-Shift beim Ein-/Ausschalten des Edit-Modus:
   // 1. Immer gleich breite (1px) Border reservieren -> wenn nicht EditMode transparent
   // 2. boxSizing border-box, damit die Border nicht das visuelle Zentrum verschiebt

@@ -13,15 +13,16 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { deleteWidget } from "../../actions";
-import { Widget } from "@/types/widgets";
+import { IWidget } from "@/widgets/core/autogen.types";
 
 
 
 export default function DeleteDashboardModal({
   widget,
   openState,
+
 }: {
-  widget: Widget;
+  widget: IWidget;
   openState: [boolean, React.Dispatch<React.SetStateAction<boolean>>];
 }) {
   
@@ -31,7 +32,7 @@ export default function DeleteDashboardModal({
     if (!result.success) {
       alert(result.errors.join("\n"));
     } else {
-      openState[1](false);
+      window.location.reload(); // Reload to reflect changes
     }
   }
 

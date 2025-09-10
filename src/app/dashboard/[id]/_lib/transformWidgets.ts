@@ -1,12 +1,9 @@
-"use client";
 
 import { Widget as PrismaWidget } from "@prisma/client";
 
-import { IWidget, WidgetType } from "@/widgets/core/autogen";
-import { widgetRegistry } from "@/widgets/core/autogen.client";
-import { IconWidget } from '@/widgets/icon-widget';
-import { TextWidget } from '@/widgets/text-widget';
-import { ValueWidget } from '@/widgets/value-widget';
+import { IWidget, WidgetType } from "@/widgets/core/autogen.types";
+
+import { widgetLogicRegistry } from "@/widgets/core/autogen.logic";
 
 /*
 ====== General Widget Mapping Functions ======
@@ -17,7 +14,6 @@ for data-driven widgets.
 */
 
 export async function transformWidgets(widgets: PrismaWidget[], data: Record<string, number>): Promise<IWidget[]> {
-    
     return widgets.map(widget => {
         const type = widget.type as WidgetType
         const props = widget.properties as any;
@@ -25,7 +21,7 @@ export async function transformWidgets(widgets: PrismaWidget[], data: Record<str
     
                 // Instantiate only the needed widget class server-side for fromDB logic.
                 // (Could be optimized with a factory map if many widgets.)
-        const instance = widgetRegistry[type];
+        const instance = widgetLogicRegistry[type];
         
         if (!instance) {
             throw new Error(`No widget registered for type: ${type}`);

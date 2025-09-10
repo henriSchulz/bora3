@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BoraWidget } from "./core/bora-widget";
+import { BoraWidget } from "../core/bora-widget";
 import { IValueWidget, Condition } from "@/types/widgets";
 import { FC } from "react";
 import { registerWidget } from "@/lib/decorators";
@@ -34,18 +34,10 @@ export class ValueWidget extends BoraWidget<IValueWidget> {
     });
     super(valueWidgetSchema);
   }
-
-  public render(): FC<{ widget: IValueWidget; }> {
-    return ValueWidgetComponent;
-  }
-
-  public renderForm(): FC<{ widget?: IValueWidget | undefined; }> {
-    return () => <div>Value Widget Form - To be implemented</div>;
-  }
-
-  public parseForm(dashboardId: string, formData: FormData): {widget?: Omit<PrismaWidget, "id" | "createdAt" | "updatedAt">, error?: string} {
-    return {error: "Not implemented yet"};
-  }
+    // For now, delegate to base implementation; override later if needed
+    public parseForm(dashboardId: string, formData: FormData): {widget?: Omit<PrismaWidget, "id" | "createdAt" | "updatedAt">, errors: string[]} {
+        return super.parseForm(dashboardId, formData);
+    }
 
 
   public static evaluateCondition(value: number, condition: Condition, conditionValue: number | [number, number]): boolean {
@@ -88,59 +80,3 @@ export class ValueWidget extends BoraWidget<IValueWidget> {
 }
 }
 
-export function ValueWidgetComponent({ widget }: { widget: IValueWidget }) {
-  const {
-    value,
-    textContent,
-    unit,
-    decimalPlaces = 2,
-    fontSize = 16,
-    fontWeight = "normal",
-    backgroundColor = "transparent",
-    defaultTextColor = "black",
-    conditions,
-  } = widget;
-
-  let textColor = defaultTextColor;
-  if (conditions) {
-    for (const rule of conditions) {
-      if (ValueWidget.evaluateCondition(value, rule.condition, rule.value)) {
-        textColor = rule.format.color;
-        break;
-      }
-    }
-  }
-
-  // Format the value
-  const formattedValue = value.toFixed(decimalPlaces);
-
-  const containerStyle = {
-    backgroundColor,
-    height: "100%",
-    width: "100%",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: "10px",
-  };
-
-  const textStyle = {
-    color: textColor,
-    fontSize: `${fontSize}px`,
-    fontWeight,
-  };
-
-  return (
-    <div>
-      {textContent && (
-        <span style={{ ...textStyle, fontSize: `${fontSize * 0.8}px` }}>
-          {textContent}
-        </span>
-      )}
-      <span style={textStyle}>
-        {formattedValue} &nbsp;{unit}
-      </span>
-    </div>
-  );
-}

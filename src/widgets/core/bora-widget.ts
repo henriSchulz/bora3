@@ -2,15 +2,19 @@ import { IBaseWidget } from "@/types/widgets";
 import { FC } from "react";
 import { ZodTypeAny } from "zod";
 import { Widget as PrismaWidget } from "@prisma/client";
-import { WidgetType } from "./autogen";
+import { WidgetType } from "./autogen.types";
 import { ZodObject } from "zod";
 import { JsonValue } from "@prisma/client/runtime/library";
 
 export abstract class BoraWidget<T extends IBaseWidget> {
   protected zodSchema: ZodTypeAny;
+  protected widgetType?: WidgetType;
 
   public constructor(zodSchema: ZodTypeAny) {
     this.zodSchema = zodSchema;
+    // Read from decorator-populated static property
+    const ctor = this.constructor as any;
+    this.widgetType = (ctor?.widgetType as WidgetType | undefined) ?? (ctor?.type as WidgetType | undefined);
   }
 
   public static getBaseProperties(widget: PrismaWidget): IBaseWidget {
@@ -24,14 +28,7 @@ export abstract class BoraWidget<T extends IBaseWidget> {
     };
   } // Extracts and returns the base properties common to all widgets
 
-  //public abstract render(): FC<{ widget: T }>;
-
-  //public abstract renderForm(): FC<{ widget?: T }>; // widget is undefined when creating a new widget and defined when an existing widget is edited
-
-
-
   // Normalizes raw FormData entries (all strings / File) into typed JS values before Zod validation.
-
   protected normalizeFormEntries(formData: FormData): Record<string, any> {
     const obj: Record<string, any> = {};
     for (const [key, raw] of formData.entries()) {
@@ -73,14 +70,14 @@ export abstract class BoraWidget<T extends IBaseWidget> {
     return obj;
   }
 // default implementation of parseForm extracts the commen props if the names match the schema. Override in subclasses if needed.
-  public parseForm(dashboardId: string, formData: FormData): {widget?: Omit<PrismaWidget, "id" | "createdAt" | "updatedAt">, error?: string} {
+  public parseForm(dashboardId: string, formData: FormData): {widget?: Omit<PrismaWidget, "id" | "createdAt" | "updatedAt">, errors: string[]} {
     const formObject = this.normalizeFormEntries(formData);
     const result = this.zodSchema.safeParse(formObject);
 
     if (!result.success) {
       console.error("Form data validation failed:", result.error);
       return { 
-        error: result.error.issues.map(issue => `${issue.path.join('.') || '<root>'}: ${issue.message}`).join('; ')
+        errors: result.error.issues.map(issue => `${issue.path.join('.') || '<root>'}: ${issue.message}`)
        };
     }
 
@@ -88,9 +85,15 @@ export abstract class BoraWidget<T extends IBaseWidget> {
 
     const {width, height, ...properties} = result.data as any;
 
+  // Resolve widget type from instance (constructor or decorator)
+  const widgetType = this.widgetType;
+  if (!widgetType) {
+      return { errors: ["Widget type is not defined on this class. Did you forget to use @registerWidget('TypeName')?"] };
+    }
+
     const baseProps = {
       dashboardId,
-      type: (this.constructor as typeof BoraWidget).name as WidgetType,
+  type: widgetType, // type is required in all schemas 
       positionX: position.x,
       positionY: position.y,
       width: width || 100,
@@ -98,6 +101,7 @@ export abstract class BoraWidget<T extends IBaseWidget> {
     };
 
     return {
+      errors: [],
       widget: {
       ...baseProps,
       properties
@@ -121,6 +125,7 @@ export abstract class BoraWidget<T extends IBaseWidget> {
       typeof parsedProperties.data === "object" &&
       parsedProperties.data !== null
     ) {
+      console.log("Parsed properties for widget ID", prismaWidget.id, ":", parsedProperties.data);
       return {
        ...BoraWidget.getBaseProperties(prismaWidget),
         ...parsedProperties.data,
