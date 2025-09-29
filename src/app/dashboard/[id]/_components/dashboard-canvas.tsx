@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
-import { DndContext, DragEndEvent, DragStartEvent, DragCancelEvent } from '@dnd-kit/core';
+import React, { useState, useEffect } from 'react';
+import { DndContext, DragEndEvent, DragCancelEvent } from '@dnd-kit/core';
 import WidgetRenderer from './widget-renderer';
-import {IWidget} from '@/widgets/core/autogen.types';
+import { IWidget } from '@/widgets/core/autogen.types';
 import { Dashboard } from '@prisma/client';
 import { updatePositions } from '../actions';
+import { useKeyboardShortcuts } from '@/components/hooks/use-keyboard-shortcuts';
+import ResizableContainer from '@/components/resizable-container';
 
 interface DashboardCanvasProps {
   initialWidgets: IWidget[];
@@ -15,40 +17,15 @@ interface DashboardCanvasProps {
 export default function DashboardCanvas({ initialWidgets, dashboard }: DashboardCanvasProps) {
   const [editMode, setEditMode] = useState(false);
   const [widgets, setWidgets] = useState<IWidget[]>(initialWidgets);
-  const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
-  // Get container size on mount
-  useLayoutEffect(() => {
-    if (containerRef.current) {
-      const { clientWidth, clientHeight } = containerRef.current;
-      setContainerSize({ width: clientWidth, height: clientHeight });
-    }
-  }, []);
 
-
-  // keyboard shortcuts for toggling edit mode E or Escape to exit
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-        const target = e.target as HTMLElement | null;
-        const isTypingTarget = !!target && (
-            target.tagName === 'INPUT' ||
-            target.tagName === 'TEXTAREA' ||
-            target.tagName === 'SELECT' ||
-            target.isContentEditable
-        );
-        if (isTypingTarget) return;
-
-        if (e.key === 'e' || e.key === 'E') {
-            setEditMode((prev) => !prev);
-        } else if (e.key === 'Escape') {
-            setEditMode(false);
-        } 
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-}, [editMode]);
+  // Keyboard shortcuts for toggling edit mode
+  useKeyboardShortcuts({
+    'e': () => setEditMode((prev) => !prev),
+    'E': () => setEditMode((prev) => !prev),
+    'Escape': () => setEditMode(false),
+  });
 
 
     // Save positions when exiting edit mode 
@@ -123,26 +100,32 @@ export default function DashboardCanvas({ initialWidgets, dashboard }: Dashboard
   }
 
   return (
-    <div
+    <ResizableContainer
+      className='p-14 border shadow rounded relative h-[80vh] w-full'
       style={{
         backgroundImage: dashboard.schematicImagePath ? `url(${dashboard.schematicImagePath})` : 'none',
         backgroundSize: 'contain',
         backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
       }}
-      ref={containerRef}
-      className='p-14 border shadow rounded relative h-[80vh] w-full'
     >
-      
-      <DndContext 
-        onDragEnd={handleDragEnd} 
-        onDragCancel={handleDragCancel}
-      >
-        {widgets.map((widget) => (
-          <WidgetRenderer key={widget.id} widget={widget} editMode={editMode} />
-        ))}
-      </DndContext>
-    </div>
+      {(size) => {
+        // Update container size state if it has changed
+        if (size.width !== containerSize.width || size.height !== containerSize.height) {
+            setContainerSize(size);
+        }
+        return (
+          <DndContext 
+            onDragEnd={handleDragEnd} 
+            onDragCancel={handleDragCancel}
+          >
+            {widgets.map((widget) => (
+              <WidgetRenderer key={widget.id} widget={widget} editMode={editMode} />
+            ))}
+          </DndContext>
+        );
+      }}
+    </ResizableContainer>
   );
   
 }

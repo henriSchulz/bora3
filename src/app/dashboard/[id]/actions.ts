@@ -21,6 +21,7 @@ export async function loadWidgets(dashboardId: string): Promise<IWidget[]> {
   return frontendWidgets;
 }
 
+
 export async function updatePositions(
   dashboardId: string,
   updatedWidgets: IWidget[]

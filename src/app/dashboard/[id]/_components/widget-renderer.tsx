@@ -1,21 +1,18 @@
 "use client";
 
-import { FC, CSSProperties, useEffect, useState } from "react";
-import { useDraggable } from "@dnd-kit/core";
-import {  IWidget } from "@/widgets/core/autogen.types";
+import { FC, useState } from "react";
+import { IWidget } from "@/widgets/core/autogen.types";
 import { widgetUIRegistry } from "@/widgets/core/autogen.ui";
-
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencil, faTrash } from "@fortawesome/free-solid-svg-icons";
-
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import DeleteWidgetModal from "./modals/delete-widget-modal";
+import DraggableWidget from "./draggable-widget";
 
 export default function WidgetRenderer({
   widget,
@@ -25,58 +22,17 @@ export default function WidgetRenderer({
   editMode: boolean;
 }) {
   const uiWidget = widgetUIRegistry[widget.type];
-  if(!uiWidget) {
+  if (!uiWidget) {
     throw new Error(`No widget found for type: ${widget.type}`);
   }
 
   const Component = uiWidget.component as FC<{ widget: IWidget }>;
-
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: widget.id,
-    disabled: !editMode,
-  });
-
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  const style: CSSProperties = {
-    position: "absolute",
-    left: `${widget.position.x * 100}%`,
-    top: `${widget.position.y * 100}%`,
-    width: widget.width,
-    height: widget.height,
-    cursor: editMode ? "move" : "default",
-    transform: "translate(-50%, -50%)",
-    overflow: "hidden",
-    // add word break if not enough space
-    wordBreak: "break-word",
-  // Verhindere Layout-Shift beim Ein-/Ausschalten des Edit-Modus:
-  // 1. Immer gleich breite (1px) Border reservieren -> wenn nicht EditMode transparent
-  // 2. boxSizing border-box, damit die Border nicht das visuelle Zentrum verschiebt
-  boxSizing: "border-box",
-  border: "1px dashed",
-  borderColor: editMode ? "gray" : "transparent",
-  };
-
-  if (transform) {
-    //  change transform if dragging to fix jump issue
-    const dragTransform = `translate3d(${transform.x}px, ${transform.y}px, 0)`;
-    style.transform = `${style.transform} ${dragTransform}`;
-    style.zIndex = 10;
-  }
-
-
   const element = (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...(mounted ? listeners : {})}
-      {...(mounted ? attributes : {})}
-    >
+    <DraggableWidget widget={widget} editMode={editMode}>
       <Component widget={widget as never} />
-    </div>
+    </DraggableWidget>
   );
 
   return (
