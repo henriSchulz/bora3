@@ -6,18 +6,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"; 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faWandMagicSparkles } from "@fortawesome/free-solid-svg-icons";
-
-import { useEffect, useState } from "react";
+} from "@/components/ui/select";
+import { useState } from "react";
 
 import { ITextWidget } from "@/types/widgets";
-
-import { Button } from "@/components/ui/button";
-
-
-
 
 export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
   const isEditMode = !!widget;
@@ -31,24 +23,9 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
   const [defaultTextColor, setDefaultTextColor] = useState(
     widget?.defaultTextColor || "#000000"
   );
-  const [width, setWidth] = useState(widget?.width || 200);
-  const [height, setHeight] = useState(widget?.height || 100);
+  const [width, setWidth] = useState(widget?.width ?? "");
+  const [height, setHeight] = useState(widget?.height ?? "");
 
-  
-  function calcPerfectHeightWidth() {
-    if(!isEditMode) {
-      const canvas = document.createElement("canvas");
-      const context = canvas.getContext("2d");
-      if(context) {
-        context.font = `${fontWeight} ${fontSize}px sans-serif`;
-        const textMetrics = context.measureText(textContent || "Preview Text");
-        const padding = 20; // add some padding
-        setWidth(Math.round(textMetrics.width + padding));
-        setHeight(Math.round(fontSize + padding));
-      }
-    }
-  }
-  
   return (
     <div className="space-y-4 overflow-hidden">
       <div>
@@ -56,7 +33,7 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
           Text Content
         </Label>
         <Input
-        required
+          required
           id="textContent"
           type="text"
           name="textContent"
@@ -117,7 +94,7 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
           <Input
             name="backgroundColor"
             id="backgroundColor"
-           // type="color"
+            // type="color"
             value={backgroundColor}
             onChange={(e) => setBackgroundColor(e.target.value)}
             className="w-full h-10 p-0 border-0"
@@ -143,56 +120,54 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
       <div className="flex gap-4 mb-2 items-end">
         <div className="flex-1">
           <Label htmlFor="boxWidth" className="block text-sm font-medium">
-        Box Width (px)
+            Box Width (px)
           </Label>
           <Input
-          min={1}
-        name="width"
-        id="boxWidth"
-        type="number"
-        value={width}
-        onChange={(e) => setWidth(Number(e.target.value))}
-        placeholder="Enter box width"
-        className="w-full"
+            name="width"
+            id="boxWidth"
+            type="number"
+            value={width}
+            onChange={(e) => setWidth(e.target.value)}
+            placeholder="Auto"
+            className="w-full"
           />
         </div>
         <div className="flex-1">
           <Label htmlFor="boxHeight" className="block text-sm font-medium">
-        Box Height (px)
+            Box Height (px)
           </Label>
           <Input
-        name="height"
-        id="boxHeight"
-        type="number"
-        value={height}
-        onChange={(e) => setHeight(Number(e.target.value))}
-        min={1}
-        placeholder="Enter box height"
-        className="w-full"
+            name="height"
+            id="boxHeight"
+            type="number"
+            value={height}
+            onChange={(e) => setHeight(e.target.value)}
+            placeholder="Auto"
+            className="w-full"
           />
         </div>
-        <div className="flex-1">
-            <Label style={{visibility: "hidden"}} className="block text-sm font-medium">
-        Box Width (px)
-          </Label>
-          
-          <Button type="button" className="w-full" onClick={calcPerfectHeightWidth}>
-        <FontAwesomeIcon icon={faWandMagicSparkles}  />
-          </Button>
+      </div>
+      <hr />
+      <div className="flex justify-center w-full m-4">
+        <div
+          className="border p-2 flex items-center justify-center"
+          style={{
+            width: width ? `${width}px` : "auto",
+            height: height ? `${height}px` : "auto",
+            backgroundColor,
+          }}
+        >
+          <span
+            style={{
+              color: defaultTextColor,
+              fontSize: `${fontSize}px`,
+              fontWeight,
+            }}
+          >
+            {textContent || "Preview Text"}
+          </span>
         </div>
       </div>
-              <hr />
-        <div className="flex justify-center w-full m-4">
-          <div
-            className="border p-2 flex items-center justify-center"
-            style={{ width: `${width}px`, height: `${height}px`, backgroundColor }}
-          >
-            <span style={{ color: defaultTextColor, fontSize: `${fontSize}px`, fontWeight }}>
-              {textContent || "Preview Text"}
-            </span>
-            </div>
-
-        </div>
     </div>
   );
 }
