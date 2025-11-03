@@ -3,11 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "generate:widgets": "node scripts/generate-widget-registry.js",
-    "dev": "npm run generate:widgets && next dev --turbopack",
-    "build": "npm run generate:widgets && next build --turbopack",
-    "start": "next start",
-    "prisma": "npx prisma migrate dev --name init && npx prisma generate"
+    "prestart": "node scripts/prestart.js",
+    "dev": "npm run prestart && next dev --turbopack",
+    "build": "npm run prestart && next build --turbopack"
+    
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
