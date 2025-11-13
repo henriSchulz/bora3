@@ -29,6 +29,7 @@ import { WidgetType } from "@/widgets/core/autogen.types";
 import { widgetUIRegistry } from "@/widgets/core/autogen.ui";
 import { widgetLogicRegistry } from "@/widgets/core/autogen.logic";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createWidget } from "../../actions";
 
 export default function NewWidgetModal({
@@ -63,7 +64,8 @@ export default function NewWidgetModal({
       return alert("Failed to create widget: " + errors.join(", "));
     }
 
-    window.location.reload();
+    const router = useRouter();
+    router.refresh();
 
    
   };

@@ -39,20 +39,66 @@ export async function updatePositions(
   await Promise.all(updatePromises);
 }
 
+export async function updateWidget(
+  oldWidget: IWidget,
+  formData: FormData
+): Promise<{ success: boolean; errors: string[] }> {
+  const errors: string[] = []; 
+  try {
+
+    const instance = widgetLogicRegistry[oldWidget.type];
+
+    if (!instance) {
+      errors.push(`Widget type "${oldWidget.type}" is not recognized.`);
+      return { success: false, errors };
+    }
+    
+    const parseFormResult = instance.parseForm(oldWidget.dashboardId, formData);
+
+    if (parseFormResult.errors.length > 0) {
+      return { success: false, errors: parseFormResult.errors };
+    }
+
+    const widget = parseFormResult.widget;
+    if (!widget) {
+      errors.push("Failed to parse widget data.");
+      return { success: false, errors };
+    }
+    
+    await prisma.widget.update({
+      where: { id: oldWidget.id },
+      data: {
+        ...widget,
+        properties: widget.properties as InputJsonValue,
+      },
+    });
+
+    revalidatePath(`/dashboard/${oldWidget.dashboardId}`);
+
+    return { success: true, errors };
+
+  } catch (error) {
+    console.error("Error updating widget:", error);
+    errors.push("Failed to update widget. Please try again.");
+    return { success: false, errors};
+  }
+  
+}
+ 
 export async function deleteWidget(
-  widgetId: string
+  widget: IWidget
 ): Promise<{ success: boolean; errors: string[] }> {
   const errors: string[] = [];
   try {
     await prisma.widget.delete({
-      where: { id: widgetId },
+      where: { id: widget.id },
     });
   } catch (error) {
     console.error("Error deleting widget:", error);
     errors.push("Failed to delete widget. Please try again.");
   }
 
-  revalidatePath(`/dashboard/${widgetId}`);
+  revalidatePath(`/dashboard/${widget.dashboardId}`);
   return { success: errors.length === 0, errors };
 }
 
@@ -80,7 +126,7 @@ export async function createWidget(
         errors: parseFormResult.errors || ["Failed to parse widget data."],
       };
     }
-    console.log("Creating widget with data:", widget);
+    
 
     await prisma.widget.create({
       data: {

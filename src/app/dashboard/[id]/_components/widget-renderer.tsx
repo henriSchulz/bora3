@@ -10,9 +10,10 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faEdit } from "@fortawesome/free-solid-svg-icons";
 import DeleteWidgetModal from "./modals/delete-widget-modal";
 import DraggableWidget from "./draggable-widget";
+import EditWidgetModal from "./modals/edit-widget-modal";
 
 export default function WidgetRenderer({
   widget,
@@ -28,6 +29,7 @@ export default function WidgetRenderer({
 
   const Component = uiWidget.component as FC<{ widget: IWidget }>;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const element = (
     <DraggableWidget widget={widget} editMode={editMode}>
@@ -42,6 +44,11 @@ export default function WidgetRenderer({
         openState={[showDeleteModal, setShowDeleteModal]}
       />
 
+      <EditWidgetModal
+        widget={widget}
+        openState={[showEditModal, setShowEditModal]}
+      />
+
       <ContextMenu>
         {editMode ? (
           <ContextMenuTrigger>{element}</ContextMenuTrigger>
@@ -50,6 +57,16 @@ export default function WidgetRenderer({
         )}
 
         <ContextMenuContent>
+          <ContextMenuItem
+          
+            onClick={() => setShowEditModal(true)}
+          >
+            <FontAwesomeIcon icon={faEdit} />
+            Edit Widget
+
+          </ContextMenuItem>
+
+
           <ContextMenuItem
             variant="destructive"
             onClick={() => setShowDeleteModal(true)}
