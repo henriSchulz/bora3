@@ -38,6 +38,7 @@ export default function NewWidgetModal({
   dashboard: Dashboard;
 }) {
   const [widgetSelectValue, setWidgetSelectValue] = useState<string>();
+  const router = useRouter();
 
   const widgetNames = Object.keys(widgetLogicRegistry);
 
@@ -64,7 +65,7 @@ export default function NewWidgetModal({
       return alert("Failed to create widget: " + errors.join(", "));
     }
 
-    const router = useRouter();
+    
     router.refresh();
 
    

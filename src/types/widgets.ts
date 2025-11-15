@@ -7,8 +7,8 @@ export type Point = { x: number; y: number }; // in percentage of dashboard size
 export interface IBaseWidget {
     id: string;
     position: Point;
-    width: number;
-    height: number;
+    width: number | null;
+    height: number | null;
     dashboardId: string;
     type: string;
 }

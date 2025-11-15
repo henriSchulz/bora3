@@ -33,29 +33,32 @@ export default function EditWidgetModal({
 
   const router = useRouter();
 
+  // src/app/dashboard/[id]/_components/modals/edit-widget-modal.tsx
+
+  // src/app/dashboard/[id]/_components/modals/edit-widget-modal.tsx
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault();
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
 
+    const result = await updateWidget(widget, formData);
 
-        const formData = new FormData(e.currentTarget);
+    if (result.success) {
+      // 1. Schließe das Modal
+      openState[1](false);
+      
+      // 2. Fordere den Server auf, die Daten neu zu laden und an den Client zu senden.
+      // Dies löst den useEffect in Schritt 2 aus.
+      router.refresh(); 
 
-       
-         const result = await updateWidget(
-          widget, formData
-        );
-          openState[1](false);
-          // refresh the current route so server components re-fetch updated data
-          router.refresh();
-        if (!result.success) {
-          alert("Failed to update widget: " + result.errors.join(", "));
-        } else {
-          openState[1](false);
-          alert("Widget updated successfully.");
-          
-          window.location.reload();
-        }
+      // (Optional) Erfolgsmeldung, wenn gewünscht
+      // alert("Widget updated successfully.");
 
-   }
+    } else {
+      // Nur bei Fehler Modal offen lassen und Fehler anzeigen
+      alert("Failed to update widget: " + result.errors.join(", "));
+    }
+  }
 
    
 

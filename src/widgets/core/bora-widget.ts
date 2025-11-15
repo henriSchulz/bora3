@@ -22,11 +22,12 @@ export abstract class BoraWidget<T extends IBaseWidget> {
       id: widget.id,
       dashboardId: widget.dashboardId,
       position: { x: widget.positionX, y: widget.positionY },
-      width: widget?.width || 100,
-      height: widget?.height || 50,
+      width: widget.width ?? null,
+      height: widget.height ?? null,
+      
       type: widget.type,
     };
-  } // Extracts and returns the base properties common to all widgets
+  }
 
   // Normalizes raw FormData entries (all strings / File) into typed JS values before Zod validation.
   protected normalizeFormEntries(formData: FormData): Record<string, any> {
@@ -83,7 +84,7 @@ export abstract class BoraWidget<T extends IBaseWidget> {
 
     const position = { x: 0.2, y: 0.2 }; // Default position for new widgets
 
-    const {width, height, ...properties} = result.data as any;
+const {width: schemaWidth, height: schemaHeight, ...properties} = result.data as any;
 
   // Resolve widget type from instance (constructor or decorator)
   const widgetType = this.widgetType;
@@ -93,11 +94,11 @@ export abstract class BoraWidget<T extends IBaseWidget> {
 
     const baseProps = {
       dashboardId,
-  type: widgetType, // type is required in all schemas 
+      type: widgetType, // type is required in all schemas 
       positionX: position.x,
       positionY: position.y,
-      width: width || 100,
-      height: height || 50,
+      width: schemaWidth ?? null,
+      height: schemaHeight ?? null,
     };
 
     return {

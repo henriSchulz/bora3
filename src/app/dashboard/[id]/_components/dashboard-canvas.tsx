@@ -29,16 +29,33 @@ export default function DashboardCanvas({ initialWidgets, dashboard, editMode }:
   // });
 
 
-    // Save positions when exiting edit mode 
-    useEffect(() => {
-        if (!editMode) {
-            const hasChanges = widgets.some((w, index) => 
-                w.position.x !== initialWidgets[index]?.position.x || 
-                w.position.y !== initialWidgets[index]?.position.y
-            );
-            if (hasChanges) updatePositions(dashboard.id,widgets);
+    // src/app/dashboard/[id]/_components/dashboard-canvas.tsx
+
+  
+  useEffect(() => {
+    
+    const newWidgetsMap = new Map(initialWidgets.map(w => [w.id, w]));
+
+    setWidgets(currentWidgets => {
+
+      return currentWidgets.map(currentWidget => {
+        const newWidgetData = newWidgetsMap.get(currentWidget.id);
+
+        if (newWidgetData) {
+          
+      
+          return {
+            ...newWidgetData, 
+            position: currentWidget.position, 
+          };
         }
-    }, [editMode, widgets, dashboard.id]);
+        
+   
+        return null; 
+      }).filter(Boolean) as IWidget[]; 
+      
+    });
+  }, [initialWidgets]);
 
 
 
