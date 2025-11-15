@@ -2,9 +2,9 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
 
-import { loadWidgets } from "./actions";
-import DashboardCanvas from "./_components/dashboard-canvas";
-import NewWidgetModal from "./_components/modals/new-widget-modal";
+import { loadWidgets } from "../actions";
+import DashboardCanvas from "../_components/dashboard-canvas";
+import NewWidgetModal from "../_components/modals/new-widget-modal";
 import { Dashboard } from "@prisma/client";
 
 export default async function DashboardPage({
@@ -31,7 +31,11 @@ export default async function DashboardPage({
 
   return (
     <div className="max-w-[90%] mx-auto">
-      <DashboardCanvas editMode={false} dashboard={dashboard} initialWidgets={widgets} />
+      <div className="m-2 mt-4 flex justify-end gap-2">
+       <NewWidgetModal dashboard={dashboard} />
+      </div>
+
+      <DashboardCanvas editMode={true} dashboard={dashboard} initialWidgets={widgets} />
     </div>
   );
 }

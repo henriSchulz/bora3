@@ -49,9 +49,10 @@ export default function EditWidgetModal({
         if (!result.success) {
           alert("Failed to update widget: " + result.errors.join(", "));
         } else {
-          alert("Widget updated successfully.");
           openState[1](false);
-          router.refresh();
+          alert("Widget updated successfully.");
+          
+          window.location.reload();
         }
 
    }

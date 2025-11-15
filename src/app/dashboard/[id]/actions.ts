@@ -68,12 +68,14 @@ export async function updateWidget(
     await prisma.widget.update({
       where: { id: oldWidget.id },
       data: {
-        ...widget,
+        //...widget,
         properties: widget.properties as InputJsonValue,
       },
     });
 
-    revalidatePath(`/dashboard/${oldWidget.dashboardId}`);
+    revalidatePath(`/dashboard/${widget.dashboardId}`);
+
+    
 
     return { success: true, errors };
 

@@ -12,20 +12,21 @@ import ResizableContainer from '@/components/resizable-container';
 interface DashboardCanvasProps {
   initialWidgets: IWidget[];
   dashboard: Dashboard;
+  editMode: boolean
 }
 
-export default function DashboardCanvas({ initialWidgets, dashboard }: DashboardCanvasProps) {
-  const [editMode, setEditMode] = useState(false);
+export default function DashboardCanvas({ initialWidgets, dashboard, editMode }: DashboardCanvasProps) {
+  //const [editMode, setEditMode] = useState(false);
   const [widgets, setWidgets] = useState<IWidget[]>(initialWidgets);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
 
   // Keyboard shortcuts for toggling edit mode
-  useKeyboardShortcuts({
-    'e': () => setEditMode((prev) => !prev),
-    'E': () => setEditMode((prev) => !prev),
-    'Escape': () => setEditMode(false),
-  });
+  // useKeyboardShortcuts({
+  //   'e': () => setEditMode((prev) => !prev),
+  //   'E': () => setEditMode((prev) => !prev),
+  //   'Escape': () => setEditMode(false),
+  // });
 
 
     // Save positions when exiting edit mode 
