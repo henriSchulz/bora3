@@ -39,6 +39,7 @@ export default function NewWidgetModal({
 }) {
   const [widgetSelectValue, setWidgetSelectValue] = useState<string>();
   const router = useRouter();
+  const [openDialog, setOpenDialog] = useState(false);
 
   const widgetNames = Object.keys(widgetLogicRegistry);
 
@@ -57,22 +58,20 @@ export default function NewWidgetModal({
       return;
     }
 
-    
+    const result = await createWidget(dashboard.id, widgetType, formData);
 
-    const { errors } = await createWidget(dashboard.id, widgetType, formData);
-
-    if (errors.length > 0) {
-      return alert("Failed to create widget: " + errors.join(", "));
+    if(result.success){
+      setOpenDialog(false);
+    } else {
+      alert("Failed to create widget: " + result.errors.join(", "));
     }
 
-    
-    router.refresh();
 
-   
+    router.refresh();
   };
 
   return (
-    <Dialog>
+    <Dialog open={openDialog} onOpenChange={setOpenDialog}>
       <DialogTrigger asChild>
         <Button>
           <FontAwesomeIcon icon={faPlus} />

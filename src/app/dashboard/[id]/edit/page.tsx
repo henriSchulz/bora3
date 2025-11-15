@@ -8,12 +8,12 @@ import NewWidgetModal from "../_components/modals/new-widget-modal";
 import { Dashboard } from "@prisma/client";
 
 export default async function DashboardPage({
-  params,
+  params
 
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const id = params.id;
+  const { id } = await params;
 
   if (!id) {
     return notFound();

@@ -126,7 +126,7 @@ const {width: schemaWidth, height: schemaHeight, ...properties} = result.data as
       typeof parsedProperties.data === "object" &&
       parsedProperties.data !== null
     ) {
-      console.log("Parsed properties for widget ID", prismaWidget.id, ":", parsedProperties.data);
+ 
       return {
        ...BoraWidget.getBaseProperties(prismaWidget),
         ...parsedProperties.data,

@@ -108,7 +108,7 @@ export async function createWidget(
   dashboardId: string,
   type: WidgetType,
   formData: FormData
-): Promise<{ errors: string[] }> {
+): Promise<{ errors: string[], success?: boolean }> {
   try {
     const instance = widgetLogicRegistry[type];
 
@@ -119,13 +119,14 @@ export async function createWidget(
     const parseFormResult = instance.parseForm(dashboardId, formData);
 
     if (parseFormResult.errors.length > 0) {
-      return { errors: parseFormResult.errors };
+      return { errors: parseFormResult.errors, success: false};
     }
 
     const widget = parseFormResult.widget;
     if (!widget) {
       return {
         errors: parseFormResult.errors || ["Failed to parse widget data."],
+        success: false
       };
     }
     
@@ -138,11 +139,11 @@ export async function createWidget(
     });
 
     revalidatePath(`/dashboard/${widget.dashboardId}`);
-    return { errors: [] };
+    return { errors: [], success: true};
   } catch (error) {
     console.error("Error creating widget:", error);
     return {
-      errors: ["Failed to create widget. Please try again."],
+      errors: ["Failed to create widget. Please try again.", error instanceof Error ? error.message : String(error)],
     };
   }
 }
