@@ -46,8 +46,8 @@ export abstract class BoraWidget<T extends IBaseWidget> {
 
       if (typeof value === "string") {
         // boolean
-        if (/^(true|false)$/i.test(value)) {
-          obj[key] = value.toLowerCase() === "true";
+        if (/^(true|false|on)$/i.test(value)) { 
+          obj[key] = value.toLowerCase() === "true" || value.toLowerCase() === "on"; 
           continue;
         }
         // number

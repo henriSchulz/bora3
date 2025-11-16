@@ -16,10 +16,13 @@ export class ValueWidget extends BoraWidget<IValueWidget> {
       textContent: z.string().optional(),
       unit: z.string().optional(),
       decimalPlaces: z.number().min(0).max(10).optional(),
+      exp: z.boolean().optional().default(false),
       fontSize: z.number().min(8).max(72).optional(),
       fontWeight: z.enum(["normal", "bold", "bolder", "lighter"]).optional(),
       backgroundColor: z.string().optional(),
       defaultTextColor: z.string().optional(),
+      width: z.number().min(1).optional(),
+      height: z.number().min(1).optional(),
       conditions: z
         .array(
           z.object({
