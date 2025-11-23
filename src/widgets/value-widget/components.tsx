@@ -18,6 +18,9 @@ import {
 import { ValueWidget } from "./widget";
 import { ConditionsModal } from "./ConditionsModal";
 
+import 'katex/dist/katex.min.css';
+import katex from 'katex';
+
 export function ValueWidgetComponent({ widget }: { widget: IValueWidget }) {
   const {
     value,
@@ -47,14 +50,15 @@ export function ValueWidgetComponent({ widget }: { widget: IValueWidget }) {
 
   const containerStyle = {
     backgroundColor,
-    height: "100%",
-    width: "100%",
+
     display: "flex",
-    flexDirection: "column",
+    flexDirection: "row", // Changed to row
     justifyContent: "center",
-    alignItems: "center",
-    padding: "10px",
-  };
+    alignItems: "center", // Center vertically
+    gap: "8px", // Add spacing
+    width: widget.width ? `${widget.width}px` : "auto",
+    height: widget.height ? `${widget.height}px` : "auto",
+  } as React.CSSProperties;
 
   const textStyle = {
     color: textColor,
@@ -62,16 +66,51 @@ export function ValueWidgetComponent({ widget }: { widget: IValueWidget }) {
     fontWeight,
   };
 
+  // Construct LaTeX string
+  // We wrap textContent in \text{} if it exists
+  // We render the value as is (it's a number string)
+  // We render unit as LaTeX (assuming user inputs LaTeX for unit, or simple text which works too)
+  const latexString = `
+    ${textContent ? `\\text{${textContent}}` : ''}
+    \\quad
+    ${formattedValue}
+    \\quad
+    ${unit ? `\\text{${unit}}` : ''} 
+  `;
+  
+  // Better approach: Render parts individually or construct a single math expression?
+  // User request: "expressions latex used... unit... numbers also latex rendered"
+  // So we should treat the whole thing as a math expression or separate parts.
+  // Let's try to render them as a single block for alignment, but maybe separate lines if it gets too long?
+  // Actually, the previous design had them side-by-side or stacked?
+  // The previous design was:
+  // {textContent} (smaller)
+  // {formattedValue} {unit}
+  
+  // Let's replicate that structure but with LaTeX rendering.
+  
+  const renderLatex = (latex: string, fontSizePx: number) => {
+      try {
+          const html = katex.renderToString(latex, {
+              throwOnError: false,
+              displayMode: false, // Inline mode
+          });
+          return <span style={{ fontSize: `${fontSizePx}px`, color: textColor, fontWeight }} dangerouslySetInnerHTML={{ __html: html }} />;
+      } catch (e) {
+          return <span>{latex}</span>;
+      }
+  };
+
   return (
-    <div>
+    <div style={containerStyle}>
       {textContent && (
-        <span style={{ ...textStyle, fontSize: `${fontSize * 0.8}px` }}>
-          {textContent}
-        </span>
+         <div>
+            {renderLatex(`\\text{${textContent}}`, fontSize * 0.8)}
+         </div>
       )}
-      <span style={textStyle}>
-        {formattedValue} &nbsp;{unit}
-      </span>
+      <div>
+        {renderLatex(`${formattedValue} \\; ${unit || ''}`, fontSize)}
+      </div>
     </div>
   );
 }
@@ -79,18 +118,35 @@ export function ValueWidgetComponent({ widget }: { widget: IValueWidget }) {
 export function ValueWidgetForm({ widget }: { widget?: IValueWidget }) {
   const isEditMode = !!widget;
 
+  const [dataId, setDataId] = useState(
+    (widget?.dataSource?.type === "database" ? widget.dataSource.dataId : "") || ""
+  );
+  
+  // --- NEUE STATES HINZUFÜGEN ---
+  const [dataSourceType, setDataSourceType] = useState<"database" | "calculation">(
+    widget?.dataSource?.type || "database"
+  );
+  const [expression, setExpression] = useState(
+    (widget?.dataSource?.type === "calculation" ? widget.dataSource.expression : "") || ""
+  );
+  const [dataIdsString, setDataIdsString] = useState(
+    (widget?.dataSource?.type === "calculation" ? widget.dataSource.dataIds.join(", ") : "") || ""
+  );
+
   const [textContent, setTextContent] = useState(widget?.textContent || "");
   const [unit, setUnit] = useState(widget?.unit || "");
   const [decimalPlaces, setDecimalPlaces] = useState(
-    widget?.decimalPlaces || 2
+    widget?.decimalPlaces ?? 2
   );
-  const [fontSize, setFontSize] = useState(widget?.fontSize || 16);
-  const [fontWeight, setFontWeight] = useState(widget?.fontWeight || "normal");
+  const [fontSize, setFontSize] = useState(widget?.fontSize ?? 16);
+  const [fontWeight, setFontWeight] = useState<"normal" | "bold">(
+    widget?.fontWeight || "normal"
+  );
   const [backgroundColor, setBackgroundColor] = useState(
     widget?.backgroundColor || "transparent"
   );
   const [defaultTextColor, setDefaultTextColor] = useState(
-    widget?.defaultTextColor || "#000000"
+    widget?.defaultTextColor || "black"
   );
   const [width, setWidth] = useState(widget?.width ?? "");
   const [height, setHeight] = useState(widget?.height ?? "");
@@ -99,11 +155,134 @@ export function ValueWidgetForm({ widget }: { widget?: IValueWidget }) {
   );
 
   const [isConditionsModalOpen, setIsConditionsModalOpen] = useState(false);
+  const [isExpressionFocused, setIsExpressionFocused] = useState(false);
 
   const previewValue = 123.456;
 
+  const renderLatex = (latex: string, fontSizePx: number, color: string = "#000000", fontWeight: string = "normal") => {
+      try {
+          const html = katex.renderToString(latex, {
+              throwOnError: false,
+              displayMode: false, // Inline mode
+          });
+          return <span style={{ fontSize: `${fontSizePx}px`, color, fontWeight }} dangerouslySetInnerHTML={{ __html: html }} />;
+      } catch (e) {
+          return <span style={{ fontSize: `${fontSizePx}px`, color, fontWeight }}>{latex}</span>;
+      }
+  };
+
   return (
     <div className="space-y-4">
+
+    <div className="space-y-3 mb-2 p-4 rounded-md border bg-gray-50 dark:bg-input/30">
+      <Label htmlFor="dataSourceType" className="mb-1 block text-sm font-medium">
+        Data Source Type
+      </Label>
+      <Select
+        name="dataSourceType"
+        value={dataSourceType}
+        onValueChange={(value) =>
+          setDataSourceType(value as "database" | "calculation")
+        }
+      >
+        <SelectTrigger id="dataSourceType" className="w-full">
+          <SelectValue placeholder="Select data source type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="database">Single ID</SelectItem>
+          <SelectItem value="calculation">Calculation (Expression)</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {dataSourceType === "database" && (
+        <div className="space-y-1">
+          <Label htmlFor="dataId" className="mb-1 block text-sm font-medium">
+            Data Source ID
+          </Label>
+          <Input
+            id="dataId"
+            type="text"
+            name="dataId"
+            value={dataId}
+            onChange={(e) => setDataId(e.target.value)}
+            placeholder="z.B. sensor_temp_1"
+            className="w-full"
+          />
+        </div>
+      )}
+
+      {dataSourceType === "calculation" && (
+        <div className="space-y-2">
+          <div>
+            <Label htmlFor="expression" className="mb-1 block text-sm font-medium">
+              Expression
+            </Label>
+            {isExpressionFocused ? (
+                <Input
+                  id="expression"
+                  type="text"
+                  name="expression"
+                  value={expression}
+                  autoFocus
+                  onBlur={() => setIsExpressionFocused(false)}
+                  onChange={(e) => {
+                    const newExpr = e.target.value;
+                    setExpression(newExpr);
+                    const variables = Array.from(newExpr.matchAll(/[a-zA-Z_][a-zA-Z0-9_]*/g))
+                      .map(m => m[0])
+                      .filter(v => !['sin', 'cos', 'tan', 'sqrt', 'log', 'exp', 'pi', 'e', 'abs', 'min', 'max'].includes(v)); // Basic exclusion
+                    
+                    const uniqueVars = Array.from(new Set(variables));
+                    setDataIdsString(uniqueVars.join(", "));
+                  }}
+                  placeholder="e.g. (temp1 + temp2) / 2"
+                  className="w-full"
+                />
+            ) : (
+                <div 
+                    className="w-full min-h-[40px] p-2 border rounded-md bg-white dark:bg-background cursor-text flex items-center"
+                    onClick={() => setIsExpressionFocused(true)}
+                >
+                    {expression ? renderLatex(expression, 16) : <span className="text-muted-foreground">Click to edit expression...</span>}
+                </div>
+            )}
+            {/* Hidden input to ensure value is submitted even when not focused/editing */}
+            {!isExpressionFocused && <input type="hidden" name="expression" value={expression} />}
+            <p className="text-xs text-muted-foreground mt-1">
+                Supports LaTeX syntax (e.g., \epsilon_0, \pi, \sqrt{"{x}"}) and physical constants.
+            </p>
+          </div>
+
+          <div>
+            <Label
+              htmlFor="dataIdsString"
+              className="mb-1 block text-sm font-medium"
+            >
+              Detected Data IDs
+            </Label>
+            <Input
+              id="dataIdsString"
+              type="text"
+              value={dataIdsString}
+              readOnly
+              className="w-full bg-gray-100 text-gray-500"
+            />
+            <input
+              type="hidden"
+              name="dataIds"
+              value={JSON.stringify(
+                dataIdsString
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+              )}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+
+
       <div className="flex gap-4">
         <div className="flex-1">
           <Label
@@ -166,9 +345,13 @@ export function ValueWidgetForm({ widget }: { widget?: IValueWidget }) {
             type="number"
             name="fontSize"
             value={fontSize}
-            onChange={(e) => setFontSize(Number(e.target.value))}
+            onChange={(e) => {
+                const val = Number(e.target.value);
+                setFontSize(val > 50 ? 50 : val);
+            }}
             placeholder="Enter font size"
             className="w-full"
+            max="50"
           />
         </div>
         <div className="flex-1">
@@ -181,7 +364,7 @@ export function ValueWidgetForm({ widget }: { widget?: IValueWidget }) {
           <Select
             name="fontWeight"
             value={fontWeight}
-            onValueChange={setFontWeight}
+            onValueChange={(value) => setFontWeight(value as "normal" | "bold")}
           >
             <SelectTrigger id="fontWeight" className="w-full">
               <SelectValue placeholder="Select font weight" />
@@ -208,7 +391,7 @@ export function ValueWidgetForm({ widget }: { widget?: IValueWidget }) {
           <Input
             name="backgroundColor"
             id="backgroundColor"
-            type="color"
+        //    type="color"
             value={backgroundColor}
             onChange={(e) => setBackgroundColor(e.target.value)}
             className="w-full h-10 p-0 border-0"
@@ -263,42 +446,37 @@ export function ValueWidgetForm({ widget }: { widget?: IValueWidget }) {
         </div>
       </div>
 
-      <Button onClick={() => setIsConditionsModalOpen(true)}>
-        Edit Conditions
-      </Button>
-
-      <hr />
-      <div className="flex justify-center w-full m-4">
-        <div
-          className="border p-2 flex flex-col items-center justify-center"
-          style={{
-            width: width ? `${width}px` : "auto",
-            height: height ? `${height}px` : "auto",
-            backgroundColor,
-          }}
-        >
-          {textContent && (
-            <span
-              style={{
-                color: defaultTextColor,
-                fontSize: `${fontSize * 0.8}px`,
-                fontWeight,
-              }}
-            >
-              {textContent}
-            </span>
-          )}
-          <span
-            style={{
-              color: defaultTextColor,
-              fontSize: `${fontSize}px`,
-              fontWeight,
-            }}
-          >
-            {previewValue.toFixed(decimalPlaces)} {unit}
-          </span>
+      <div className="flex justify-between items-center pt-2">
+        <Button type="button" variant="outline" size="sm" onClick={() => setIsConditionsModalOpen(true)}>
+            Conditional Formatting
+        </Button>
+        <div className="text-xs text-muted-foreground">
+            {conditions.length} rule(s) active
         </div>
       </div>
+
+      <div className="mt-2 border rounded-md bg-gray-50/50 dark:bg-gray-900/50 max-h-[300px] overflow-auto w-full max-w-full">
+        <div className="min-w-full min-h-full flex items-center justify-center p-4">
+          <div
+            className="border p-2 flex flex-row items-center justify-center gap-2 bg-white dark:bg-black shadow-sm overflow-hidden shrink-0"
+            style={{
+              width: width ? `${width}px` : "auto",
+              height: height ? `${height}px` : "auto",
+              backgroundColor,
+            }}
+          >
+            {textContent && (
+               <div>
+                  {renderLatex(`\\text{${textContent}}`, fontSize * 0.8, defaultTextColor, fontWeight)}
+               </div>
+            )}
+            <div>
+              {renderLatex(`${previewValue.toFixed(decimalPlaces)} \\; ${unit || ''}`, fontSize, defaultTextColor, fontWeight)}
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <ConditionsModal
         isOpen={isConditionsModalOpen}
         onClose={() => setIsConditionsModalOpen(false)}
@@ -308,6 +486,7 @@ export function ValueWidgetForm({ widget }: { widget?: IValueWidget }) {
           setIsConditionsModalOpen(false);
         }}
       />
+      <input type="hidden" name="conditions" value={JSON.stringify(conditions)} />
     </div>
   );
 }

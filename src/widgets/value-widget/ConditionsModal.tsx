@@ -22,6 +22,10 @@ import {
   Condition,
 } from "@/types/widgets";
 
+import 'katex/dist/katex.min.css';
+import katex from 'katex';
+import { Trash2 } from "lucide-react";
+
 interface ConditionsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -36,6 +40,31 @@ const isIntervalCondition = (condition: Condition) => {
     condition === Condition.IsInLeftExclusiveRightInclusiveInterval ||
     condition === Condition.IsInLeftInclusiveRightExclusiveInterval
   );
+};
+
+const conditionToLatex: Record<Condition, string> = {
+  [Condition.Equals]: "x = v",
+  [Condition.LessThan]: "x < v",
+  [Condition.GreaterThan]: "x > v",
+  [Condition.NotEquals]: "x \\neq v",
+  [Condition.LessThanEquals]: "x \\leq v",
+  [Condition.GreaterThanEquals]: "x \\geq v",
+  [Condition.IsInExclusiveInterval]: "a < x < b",
+  [Condition.IsInInclusiveInterval]: "a \\leq x \\leq b",
+  [Condition.IsInLeftExclusiveRightInclusiveInterval]: "a < x \\leq b",
+  [Condition.IsInLeftInclusiveRightExclusiveInterval]: "a \\leq x < b",
+};
+
+const renderLatex = (latex: string) => {
+    try {
+        const html = katex.renderToString(latex, {
+            throwOnError: false,
+            displayMode: false,
+        });
+        return <span dangerouslySetInnerHTML={{ __html: html }} />;
+    } catch (e) {
+        return <span>{latex}</span>;
+    }
 };
 
 export function ConditionsModal({
@@ -106,9 +135,10 @@ export function ConditionsModal({
     setLocalConditions(newConditions);
   };
 
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Edit Conditions</DialogTitle>
         </DialogHeader>
@@ -121,25 +151,26 @@ export function ConditionsModal({
                   handleConditionChange(index, "condition", value)
                 }
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select condition" />
+                <SelectTrigger className="w-[180px]">
+                  {renderLatex(conditionToLatex[rule.condition])}
                 </SelectTrigger>
                 <SelectContent>
                   {Object.values(Condition).map((c) => (
                     <SelectItem key={c} value={c}>
-                      {c}
+                      {renderLatex(conditionToLatex[c])}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {isIntervalCondition(rule.condition) ? (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1">
                   <Input
                     type="number"
                     value={(rule.value as [number, number])[0]}
                     onChange={(e) =>
                       handleValueChange(index, 0, Number(e.target.value))
                     }
+                    className="flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <span>-</span>
                   <Input
@@ -148,6 +179,7 @@ export function ConditionsModal({
                     onChange={(e) =>
                       handleValueChange(index, 1, Number(e.target.value))
                     }
+                    className="flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               ) : (
@@ -161,6 +193,7 @@ export function ConditionsModal({
                       Number(e.target.value)
                     )
                   }
+                  className="flex-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               )}
               <Input
@@ -169,12 +202,15 @@ export function ConditionsModal({
                 onChange={(e) =>
                   handleFormatChange(index, "color", e.target.value)
                 }
+                className="w-12 h-10 p-1 px-1 shrink-0"
               />
               <Button
-                variant="destructive"
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 shrink-0"
                 onClick={() => handleRemoveCondition(index)}
               >
-                Remove
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           ))}

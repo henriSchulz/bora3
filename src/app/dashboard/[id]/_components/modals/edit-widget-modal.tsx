@@ -65,7 +65,7 @@ export default function EditWidgetModal({
 
     return (
     <Dialog open={openState[0]} onOpenChange={openState[1]}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Widget</DialogTitle>
           <DialogDescription>
