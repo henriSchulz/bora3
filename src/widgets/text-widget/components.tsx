@@ -68,7 +68,7 @@ export function TextWidgetForm({ widget }: { widget?: ITextWidget }) {
           <Select
             name="fontWeight"
             value={fontWeight}
-            onValueChange={setFontWeight}
+            onValueChange={(value) => setFontWeight(value as "normal" | "bold")}
           >
             <SelectTrigger id="fontWeight" className="w-full">
               <SelectValue placeholder="Select font weight" />

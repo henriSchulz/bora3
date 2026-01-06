@@ -28,7 +28,7 @@ export default function DeleteDashboardModal({
   
   async function handleDelete(event: React.FormEvent) {
     event.preventDefault();
-    const result = await deleteWidget(widget.id);
+    const result = await deleteWidget(widget);
     if (!result.success) {
       alert(result.errors.join("\n"));
     } else {

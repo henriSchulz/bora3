@@ -5,6 +5,7 @@
 // It contains the UI registry for all widgets.
 import { FC } from "react";
 import { WidgetType, IWidget } from './autogen.types';
+import { IconWidgetComponent, IconWidgetForm } from './../icon-widget/components';
 import { TextWidgetComponent, TextWidgetForm } from './../text-widget/components';
 import { ValueWidgetComponent, ValueWidgetForm } from './../value-widget/components';
 
@@ -14,6 +15,10 @@ type WidgetUIRegistry = Record<WidgetType, {
 }>;
 
 export const widgetUIRegistry: WidgetUIRegistry = {
+  "Icon": {
+    component: IconWidgetComponent,
+    form: IconWidgetForm,
+  },
   "Text": {
     component: TextWidgetComponent,
     form: TextWidgetForm,

@@ -4,10 +4,12 @@
 import { WidgetType } from './autogen.types';
 import { BoraWidget } from './bora-widget';
 import { IBaseWidget } from '@/types/widgets';
+import { IconWidget } from './../icon-widget/widget';
 import { TextWidget } from './../text-widget/widget';
 import { ValueWidget } from './../value-widget/widget';
 
 export const widgetLogicRegistry: Record<WidgetType, BoraWidget<IBaseWidget>>  = {
+  "Icon": new IconWidget(),
   "Text": new TextWidget(),
   "Value": new ValueWidget(),
 };

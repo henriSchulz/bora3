@@ -6,6 +6,7 @@ testDataInserter.ts
 *.db
 
 /public/uploads
+/public/icons
 
 # dependencies
 /node_modules
@@ -19,6 +20,7 @@ testDataInserter.ts
 
 # testing
 /coverage
+/icons
 
 # next.js
 /.next/
